@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 :root {
-  --bg: #030712;
+  --bg: #000000;
   --surface: rgba(255, 255, 255, 0.03);
   --surface-solid: #0b0f19;
   --surface-strong: #111827;
@@ -44,7 +44,7 @@ body {
     radial-gradient(circle at 10% 20%, rgba(255, 87, 87, 0.08), transparent 35%),
     radial-gradient(circle at 90% 10%, rgba(140, 82, 255, 0.12), transparent 40%),
     radial-gradient(rgba(255, 255, 255, 0.03) 1.5px, transparent 1.5px),
-    #030712;
+    var(--bg);
   background-size: 100% 100%, 100% 100%, 30px 30px, 100% 100%;
 }
 
@@ -222,21 +222,11 @@ button {
   background: var(--surface-solid);
 }
 
-.hero-home::before,
 .hero-home::after {
   content: "";
   position: absolute;
   inset: auto;
   pointer-events: none;
-}
-
-.hero-home::before {
-  width: 320px;
-  height: 320px;
-  right: -80px;
-  top: -90px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(126, 240, 92, 0.45), transparent 70%);
 }
 
 .hero-home::after {
@@ -337,7 +327,7 @@ h1 {
   margin-bottom: 14px;
   padding: 10px 16px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(38, 123, 202, 0.95), rgba(112, 227, 97, 0.95));
+  background: #000000;
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 800;
@@ -347,8 +337,7 @@ h1 {
 
 .hero-highlight {
   display: inline-block;
-  color: #7ef05c;
-  text-shadow: 0 10px 30px rgba(126, 240, 92, 0.18);
+  color: #000000;
 }
 
 .hero-meta-row {
@@ -797,7 +786,7 @@ h1 {
   width: 72px;
   height: 56px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(38, 123, 202, 0.95), rgba(112, 227, 97, 0.95));
+  background: linear-gradient(90deg, #FF5757, #8C52FF);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 8px 30px rgba(0,0,0,0.45);
@@ -1336,7 +1325,7 @@ textarea {
 }
 
 select option {
-  background-color: #030712;
+  background-color: var(--bg);
   color: var(--ink);
 }
 

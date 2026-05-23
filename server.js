@@ -16,7 +16,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const TEAM_LIMIT = 40;
 const isProduction = process.env.NODE_ENV === "production";
-const ASSET_VERSION = "2026-05-23-gradient-1";
+const ASSET_VERSION = "2026-05-23-gradient-2";
 const DEFAULT_DOMAINS = [
   "AI",
   "Community",

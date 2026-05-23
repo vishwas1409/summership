@@ -351,11 +351,7 @@ h1 {
 
 .hero-highlight {
   display: inline-block;
-  background: var(--gradient-accent);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 8px 24px rgba(52, 148, 230, 0.25));
+  color: #000000;
 }
 
 .hero-meta-row {

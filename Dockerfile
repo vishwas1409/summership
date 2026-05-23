@@ -21,6 +21,5 @@ ENV DB_PASSWORD=
 ENV DB_NAME=hackathon_selection
 
 EXPOSE 3000
-VOLUME ["/var/lib/mysql"]
 
 CMD ["scripts/start.sh"]

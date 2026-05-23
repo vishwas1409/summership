@@ -4,7 +4,7 @@ set -euo pipefail
 export DB_HOST="${DB_HOST:-127.0.0.1}"
 export DB_PORT="${DB_PORT:-3306}"
 export DB_USER="${DB_USER:-root}"
-export DB_PASSWORD="${DB_PASSWORD:-}"
+export DB_PASSWORD="${DB_PASSWORD:-rootpassword}"
 export DB_NAME="${DB_NAME:-hackathon_selection}"
 export NODE_ENV="${NODE_ENV:-production}"
 
@@ -33,7 +33,9 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 
-mariadb -h 127.0.0.1 -uroot -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+# Set root password and create database
+mariadb -h 127.0.0.1 -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+mariadb -h 127.0.0.1 -uroot -p"${DB_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
 
 echo "Starting Node app on port ${PORT:-3000}..."
 exec node server.js

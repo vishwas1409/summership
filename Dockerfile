@@ -17,7 +17,7 @@ ENV NODE_ENV=production
 ENV DB_HOST=127.0.0.1
 ENV DB_PORT=3306
 ENV DB_USER=root
-ENV DB_PASSWORD=
+ENV DB_PASSWORD=rootpassword
 ENV DB_NAME=hackathon_selection
 
 EXPOSE 3000

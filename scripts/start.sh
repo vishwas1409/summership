@@ -11,10 +11,11 @@ export NODE_ENV="${NODE_ENV:-production}"
 mkdir -p /var/run/mysqld
 chown -R mysql:mysql /var/run/mysqld /var/lib/mysql 2>/dev/null || true
 
-if [ ! -d "/var/lib/mysql/mysql" ]; then
-  echo "Initializing embedded MariaDB..."
-  mariadb-install-db --user=mysql --datadir=/var/lib/mysql >/dev/null
-fi
+# IMPORTANT: Remove old database to force fresh initialization
+rm -rf /var/lib/mysql/*
+
+echo "Initializing fresh MariaDB..."
+mariadb-install-db --user=mysql --datadir=/var/lib/mysql >/dev/null
 
 echo "Starting embedded MariaDB..."
 mariadbd --user=mysql --bind-address=127.0.0.1 --datadir=/var/lib/mysql &
@@ -40,5 +41,6 @@ mariadb -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
 mariadb -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
 mariadb -e "FLUSH PRIVILEGES;"
 
+echo "MariaDB initialized with user: ${DB_USER}"
 echo "Starting Node app on port ${PORT:-3000}..."
 exec node server.js

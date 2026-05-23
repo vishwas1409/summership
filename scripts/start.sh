@@ -3,10 +3,11 @@ set -euo pipefail
 
 export DB_HOST="${DB_HOST:-127.0.0.1}"
 export DB_PORT="${DB_PORT:-3306}"
-export DB_USER="${DB_USER:-root}"
-export DB_PASSWORD="${DB_PASSWORD:-}"
 export DB_NAME="${DB_NAME:-hackathon_selection}"
 export NODE_ENV="${NODE_ENV:-production}"
+
+APP_DB_USER="${DB_USER:-hackathon}"
+APP_DB_PASSWORD="${DB_PASSWORD:-hackathon_root}"
 
 mkdir -p /var/run/mysqld
 chown -R mysql:mysql /var/run/mysqld /var/lib/mysql 2>/dev/null || true
@@ -21,7 +22,7 @@ mariadbd --user=mysql --bind-address=127.0.0.1 --datadir=/var/lib/mysql &
 MYSQL_PID=$!
 
 for attempt in $(seq 1 60); do
-  if mariadb-admin ping -h 127.0.0.1 --silent 2>/dev/null; then
+  if mariadb-admin ping --silent 2>/dev/null; then
     echo "MariaDB ready after ${attempt} second(s)."
     break
   fi
@@ -33,7 +34,19 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 
-mariadb -h 127.0.0.1 -uroot -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+echo "Configuring database user for the app..."
+mariadb -uroot <<EOSQL
+CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
+CREATE USER IF NOT EXISTS '${APP_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${APP_DB_PASSWORD}';
+CREATE USER IF NOT EXISTS '${APP_DB_USER}'@'localhost' IDENTIFIED BY '${APP_DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${APP_DB_USER}'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${APP_DB_USER}'@'localhost';
+FLUSH PRIVILEGES;
+EOSQL
 
+export DB_USER="$APP_DB_USER"
+export DB_PASSWORD="$APP_DB_PASSWORD"
+
+echo "Database ready (${DB_USER}@${DB_HOST}/${DB_NAME})."
 echo "Starting Node app on port ${PORT:-3000}..."
 exec node server.js

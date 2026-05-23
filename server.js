@@ -501,14 +501,26 @@ async function ensureAdminAccount() {
   const username = (process.env.ADMIN_USERNAME || "admin").trim();
   const password = process.env.ADMIN_PASSWORD || "ChangeMe123!";
 
-  const [admins] = await pool.query("SELECT id FROM admins WHERE username = ? LIMIT 1", [username]);
-  if (admins.length > 0) {
+  const [admins] = await pool.query(
+    "SELECT id, password_hash AS passwordHash FROM admins WHERE username = ? LIMIT 1",
+    [username]
+  );
+
+  if (admins.length === 0) {
+    const passwordHash = await bcrypt.hash(password, 12);
+    await pool.query("INSERT INTO admins (username, password_hash) VALUES (?, ?)", [username, passwordHash]);
+    console.log(`Bootstrapped admin account for username "${username}".`);
     return;
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
-  await pool.query("INSERT INTO admins (username, password_hash) VALUES (?, ?)", [username, passwordHash]);
-  console.log(`Bootstrapped admin account for username "${username}".`);
+  if (process.env.ADMIN_PASSWORD) {
+    const passwordMatches = await bcrypt.compare(password, admins[0].passwordHash);
+    if (!passwordMatches) {
+      const passwordHash = await bcrypt.hash(password, 12);
+      await pool.query("UPDATE admins SET password_hash = ? WHERE id = ?", [passwordHash, admins[0].id]);
+      console.log(`Synced admin password for "${username}" from ADMIN_PASSWORD env.`);
+    }
+  }
 }
 
 async function fetchParticipantSelection(participantId) {

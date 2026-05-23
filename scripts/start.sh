@@ -3,8 +3,8 @@ set -euo pipefail
 
 export DB_HOST="${DB_HOST:-127.0.0.1}"
 export DB_PORT="${DB_PORT:-3306}"
-export DB_USER="${DB_USER:-root}"
-export DB_PASSWORD="${DB_PASSWORD:-rootpassword}"
+export DB_USER="${DB_USER:-admin}"
+export DB_PASSWORD="${DB_PASSWORD:-admin123}"
 export DB_NAME="${DB_NAME:-hackathon_selection}"
 export NODE_ENV="${NODE_ENV:-production}"
 
@@ -33,9 +33,12 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 
-# Use socket connection (no password needed) to set the password
-mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+# Create custom admin user with password (using socket connection)
+mariadb -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+mariadb -e "GRANT ALL PRIVILEGES ON *.* TO '${DB_USER}'@'localhost' WITH GRANT OPTION;"
 mariadb -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+mariadb -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
+mariadb -e "FLUSH PRIVILEGES;"
 
 echo "Starting Node app on port ${PORT:-3000}..."
 exec node server.js

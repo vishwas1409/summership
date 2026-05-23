@@ -33,9 +33,9 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 
-# Set root password and create database
-mariadb -h 127.0.0.1 -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
-mariadb -h 127.0.0.1 -uroot -p"${DB_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+# Use socket connection (no password needed) to set the password
+mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+mariadb -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
 
 echo "Starting Node app on port ${PORT:-3000}..."
 exec node server.js

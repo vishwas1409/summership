@@ -133,13 +133,55 @@ const DEFAULT_PROBLEM_CATALOG = [
   },
 ];
 
+function resolveDbConfig() {
+  const connectionUrl =
+    process.env.DATABASE_URL || process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL;
+
+  if (connectionUrl && /^mysql/i.test(connectionUrl)) {
+    try {
+      const parsed = new URL(connectionUrl);
+      const host = parsed.hostname;
+      return {
+        host,
+        port: Number(parsed.port || 3306),
+        user: decodeURIComponent(parsed.username || "root"),
+        password: decodeURIComponent(parsed.password || ""),
+        database: decodeURIComponent(parsed.pathname.replace(/^\//, "") || "hackathon_selection"),
+        ssl: host && !["localhost", "127.0.0.1"].includes(host) ? { rejectUnauthorized: false } : undefined,
+      };
+    } catch (error) {
+      console.warn("Could not parse database URL:", error.message || error);
+    }
+  }
+
+  const host =
+    process.env.DB_HOST ||
+    process.env.MYSQLHOST ||
+    process.env.MYSQL_HOST ||
+    "localhost";
+  const isRemoteHost = host && !["localhost", "127.0.0.1"].includes(host);
+
+  return {
+    host,
+    port: Number(process.env.DB_PORT || process.env.MYSQLPORT || process.env.MYSQL_PORT || 3306),
+    user: process.env.DB_USER || process.env.MYSQLUSER || process.env.MYSQL_USER || "root",
+    password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD || "",
+    database:
+      process.env.DB_NAME ||
+      process.env.MYSQLDATABASE ||
+      process.env.MYSQL_DATABASE ||
+      "hackathon_selection",
+    ssl:
+      process.env.DB_SSL === "true" || (isProduction && isRemoteHost)
+        ? { rejectUnauthorized: false }
+        : undefined,
+  };
+}
+
 function buildPool() {
+  const dbConfig = resolveDbConfig();
   return mysql.createPool({
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "hackathon_selection",
+    ...dbConfig,
     waitForConnections: true,
     connectionLimit: 10,
     namedPlaceholders: true,
@@ -1308,7 +1350,22 @@ app.use((error, req, res, next) => {
   });
 });
 
+async function verifyDatabaseConnection() {
+  try {
+    await pool.query("SELECT 1");
+  } catch (error) {
+    const dbConfig = resolveDbConfig();
+    const details = [error.message, error.code, `host=${dbConfig.host}`, `database=${dbConfig.database}`]
+      .filter(Boolean)
+      .join(" | ");
+    throw new Error(
+      `Database connection failed (${details}). Configure DB_HOST, DB_USER, DB_PASSWORD, DB_NAME or link Railway MySQL (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE).`
+    );
+  }
+}
+
 async function startServer() {
+  await verifyDatabaseConnection();
   await initializeDatabase();
   await ensureProblemBriefColumns();
   await ensureParticipantSelectionSupport();
@@ -1322,6 +1379,10 @@ async function startServer() {
 }
 
 startServer().catch((error) => {
-  console.error("Failed to start server:", error.message);
+  const detail = error?.message || error?.code || String(error);
+  console.error("Failed to start server:", detail);
+  if (error?.stack) {
+    console.error(error.stack);
+  }
   process.exit(1);
 });

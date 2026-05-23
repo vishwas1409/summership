@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" />
+    <link rel="stylesheet" href="/styles/main.css?v=<%= assetVersion %>" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/header") %>
+      <%- include("partials/flash") %>
+
+      <!-- poster modal removed -->
+
+      <section class="hero hero-home">
+        <div class="hero-copy">
+          <div class="hero-logos-row">
+            <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills logo" class="hero-logo-mark" />
+            <span class="hero-logo-separator">×</span>
+            <img src="https://www.image2url.com/r2/default/images/1779541796671-6c0e10cd-a2db-405e-9670-6022e41f2860.jpg" alt="CodeQuesters logo" class="hero-logo-mark" />
+          </div>
+          <p class="eyebrow">GradSkills presents</p>
+          <div class="hero-banner-pill">Summership Challenge</div>
+          <h1>Compete & Win - Your Summer <span class="hero-highlight">Internship.</span></h1>
+          <p class="hero-text">
+            Official problem statement selection board for the GradSkills Summership Challenge 2026. Browse the challenge list, compare ideas, and confirm your team in one smooth flow.
+          </p>
+          <div class="hero-meta-row">
+            <span class="hero-meta-item">Hyderabad, India</span>
+            <span class="hero-meta-separator"></span>
+            <span class="hero-meta-item">24 May - 31 May 2026</span>
+            <span class="hero-meta-separator"></span>
+            <span class="hero-meta-item">Powered by GradSkills</span>
+          </div>
+          <div class="hero-actions">
+            <% if (participant) { %>
+              <a href="#problem-board" class="primary-button hero-link">Choose Your Problem Statement</a>
+            <% } else { %>
+              <button type="button" class="primary-button hero-link hero-button" data-open-signup>
+                Signup / Login to Select
+              </button>
+            <% } %>
+            <div class="hero-note">
+              <% if (participantSelection) { %>
+                <strong>Selection Locked:</strong>
+                <span>Your team has already confirmed one problem statement.</span>
+              <% } else if (participant) { %>
+                <strong>Ready to choose:</strong>
+                <span>Your logged-in team can confirm one statement only.</span>
+              <% } else { %>
+                <strong>Selection Window:</strong>
+                <span><%= teamLimit %> teams per statement before it closes</span>
+              <% } %>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <article class="stat-card">
+              <span>Active statements</span>
+              <strong><%= stats.problemCount %></strong>
+            </article>
+            <article class="stat-card">
+              <span>Total team picks</span>
+              <strong><%= stats.selectionCount %></strong>
+            </article>
+            <article class="stat-card">
+              <span>Selection limit</span>
+              <strong><%= teamLimit %> / problem</strong>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <% if (sponsorLogos && sponsorLogos.length > 0) { %>
+        <section class="sponsors-card">
+          <div class="controls-head">
+            <div>
+              <p class="eyebrow">Our Partners</p>
+              <h2>Backing Summership 2026</h2>
+            </div>
+            <p class="controls-copy">Our valued partners making this event possible.</p>
+          </div>
+          <div class="sponsor-marquee">
+            <div class="sponsor-track">
+              <% sponsorLogos.forEach((sponsor, index) => { %>
+                <article class="sponsor-item sponsor-item-<%= (index % 3) + 1 %>">
+                  <div class="sponsor-logo-shell">
+                    <img src="<%= sponsor.src %>?v=<%= assetVersion %>" alt="<%= sponsor.alt %>" loading="lazy" />
+                  </div>
+                  <div class="sponsor-label">
+                    <strong><%= sponsor.name %></strong>
+                    <span class="sponsor-role"><%= sponsor.role %></span>
+                  </div>
+                </article>
+              <% }) %>
+            </div>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (participant) { %>
+        <section class="controls-card account-section" id="participant-access">
+          <div class="controls-head">
+            <div>
+              <p class="eyebrow">Participant Account</p>
+              <h2><%= participant.teamName %></h2>
+            </div>
+            <p class="controls-copy">Your team account is active. Problem selection is tied to this login and cannot be changed after confirmation.</p>
+          </div>
+
+          <div class="account-grid">
+            <article class="account-card">
+              <span class="account-label">Participant Name</span>
+              <strong><%= participant.teamName %></strong>
+            </article>
+            <article class="account-card">
+              <span class="account-label">Email Address</span>
+              <strong><%= participant.emailAddress %></strong>
+            </article>
+            <article class="account-card">
+              <span class="account-label">Mobile Number</span>
+              <strong><%= participant.mobileNumber %></strong>
+            </article>
+            <% if (participantSelection) { %>
+              <article class="account-card">
+                <span class="account-label">Selected Problem</span>
+                <strong><%= participantSelection.title %></strong>
+              </article>
+              <article class="account-card">
+                <span class="account-label">Domain</span>
+                <strong><%= participantSelection.domain %></strong>
+              </article>
+              <article class="account-card">
+                <span class="account-label">Problem Code</span>
+                <strong><%= participantSelection.problemCode || "Not assigned" %></strong>
+              </article>
+              <article class="account-card">
+                <span class="account-label">Confirmed At</span>
+                <strong><%= participantSelection.createdAtFormatted || "Saved" %></strong>
+              </article>
+            <% } %>
+          </div>
+
+          <% if (participantSelection) { %>
+            <div class="locked-selection-card">
+              <div class="locked-selection-copy">
+                <p class="eyebrow">Confirmed Selection</p>
+                <h3><%= participantSelection.title %></h3>
+                <p><%= participantSelection.problemStatement %></p>
+              </div>
+              <div class="locked-selection-meta">
+                <% if (participantSelection.problemCode) { %>
+                  <span class="pill">Code #<%= participantSelection.problemCode %></span>
+                <% } %>
+                <span class="pill"><%= participantSelection.domain %></span>
+                <span class="pill pill-danger">Editing disabled</span>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="locked-selection-card locked-selection-card-ready">
+              <div class="locked-selection-copy">
+                <p class="eyebrow">Selection Status</p>
+                <h3>Your team can select one problem statement.</h3>
+                <p>Once you confirm a problem, the choice is locked and the edit option stays disabled.</p>
+              </div>
+              <a href="#problem-board" class="primary-button hero-link">Browse Open Statements</a>
+            </div>
+          <% } %>
+        </section>
+      <% } %>
+
+      <section class="controls-card" id="problem-board">
+        <div class="controls-head">
+          <div>
+            <p class="eyebrow">Problem Board</p>
+            <h2>Browse available problem statements</h2>
+          </div>
+          <p class="controls-copy">Use search and filters to find the right fit for your team.</p>
+        </div>
+        <div class="toolbar">
+          <label class="search-field">
+            <span class="search-label">Search</span>
+            <input id="problem-search" type="search" placeholder="Try AI, fintech, fraud detection, classroom, security..." />
+          </label>
+          <label class="select-field">
+            <span class="search-label">Availability</span>
+            <select id="availability-filter">
+              <option value="all">All problems</option>
+              <option value="open">Available only</option>
+              <option value="full">Full only</option>
+            </select>
+          </label>
+        </div>
+        <div class="chip-row">
+          <button class="filter-chip active" data-domain-filter="All" type="button">All domains</button>
+          <% domains.forEach((domain) => { %>
+            <button class="filter-chip" data-domain-filter="<%= domain %>" type="button"><%= domain %></button>
+          <% }) %>
+        </div>
+      </section>
+
+      <main id="problem-groups" class="problem-groups">
+        <div class="problem-grid">
+          <% problems.forEach((problem) => { %>
+                <article
+                  class="problem-card <%= problem.isFull ? "full" : "" %>"
+                  data-problem-card
+                  data-domain="<%= problem.domain.toLowerCase() %>"
+                  data-search="<%= problem.searchText %>"
+                  data-status="<%= problem.isFull ? "full" : "open" %>"
+                >
+                  <div class="problem-row-main">
+                    <div class="problem-card-heading">
+                      <div class="problem-top">
+                        <span class="pill"><%= problem.domain %></span>
+                        <span class="pill pill-<%= problem.isFull ? "danger" : "success" %>"><%= problem.isFull ? "Unavailable" : "Open" %></span>
+                      </div>
+
+                      <h3 class="problem-brief-title"><%= problem.title %></h3>
+
+                      <% if (problem.problemCode) { %>
+                        <p class="problem-card-code">Code: #<%= problem.problemCode %></p>
+                      <% } %>
+                    </div>
+
+                    <% if (problem.hasOverview) { %>
+                      <p class="problem-lead"><%= problem.description %></p>
+                    <% } %>
+
+                    <div class="problem-detail-grid">
+                      <% if (problem.persona) { %>
+                        <div class="problem-detail-card">
+                          <span class="problem-detail-label">Persona</span>
+                          <p><%= problem.persona %></p>
+                        </div>
+                      <% } %>
+
+                      <div class="problem-detail-card problem-detail-card-wide">
+                        <span class="problem-detail-label">Problem Statement</span>
+                        <p><%= problem.problemStatement %></p>
+                      </div>
+
+                      <% if (problem.solutionIdea) { %>
+                        <div class="problem-detail-card">
+                          <span class="problem-detail-label">Solution Idea</span>
+                          <p><%= problem.solutionIdea %></p>
+                        </div>
+                      <% } %>
+
+                      <% if (problem.whySelected) { %>
+                        <div class="problem-detail-card">
+                          <span class="problem-detail-label">Why Selected</span>
+                          <p><%= problem.whySelected %></p>
+                        </div>
+                      <% } %>
+                    </div>
+
+                    <% if (problem.keyTechnologyList.length > 0) { %>
+                      <div class="problem-tech-section">
+                        <span class="problem-detail-label">Key Technologies</span>
+                        <div class="problem-tech-list">
+                          <% problem.keyTechnologyList.forEach((technology) => { %>
+                            <span class="tech-pill"><%= technology %></span>
+                          <% }) %>
+                        </div>
+                      </div>
+                    <% } %>
+                  </div>
+
+                  <aside class="problem-row-aside">
+                    <div class="selection-panel">
+                      <span class="selection-panel-label">Selection</span>
+                      <% if (participantSelection && Number(participantSelection.problemId) === Number(problem.id)) { %>
+                        <strong>Selected by your team</strong>
+                        <p>Your team has already locked this statement. No edit option is available after confirmation.</p>
+                      <% } else if (participantSelection) { %>
+                        <strong>Your selection is locked</strong>
+                        <p>Your team already confirmed another statement, so this one can no longer be chosen.</p>
+                      <% } else if (problem.isFull) { %>
+                        <strong>This statement is full</strong>
+                        <p>All available slots are already taken.</p>
+                      <% } else if (!participant) { %>
+                        <strong>Login required</strong>
+                        <p>Participants must signup or login before they can confirm any problem statement.</p>
+                      <% } else { %>
+                        <strong>Ready for your team</strong>
+                        <p>Review the summary and confirm your team in one short step.</p>
+                      <% } %>
+                    </div>
+
+                    <div class="availability-block availability-block-row">
+                      <div class="availability-copy">
+                        <strong><%= problem.teamCount %>/<%= teamLimit %> teams selected</strong>
+                        <span><%= problem.isFull ? "All slots filled for this statement" : `${problem.availableSlots} slots left before it closes` %></span>
+                      </div>
+                      <div class="progress-track">
+                        <div class="progress-fill" style="width: <%= (problem.teamCount / teamLimit) * 100 %>%"></div>
+                      </div>
+                    </div>
+
+                    <% if (problem.isFull) { %>
+                      <button type="button" class="primary-button select-trigger" disabled>
+                        Slots Filled
+                      </button>
+                    <% } else if (!participant) { %>
+                      <button type="button" class="primary-button select-trigger" data-open-login>
+                        Login to Select
+                      </button>
+                    <% } else if (participantSelection && Number(participantSelection.problemId) === Number(problem.id)) { %>
+                      <button type="button" class="primary-button select-trigger" disabled>
+                        Selected by Your Team
+                      </button>
+                    <% } else if (participantSelection) { %>
+                      <button type="button" class="primary-button select-trigger" disabled>
+                        Selection Locked
+                      </button>
+                    <% } else { %>
+                      <button
+                        type="button"
+                        class="primary-button select-trigger"
+                        <%= problem.isFull ? "disabled" : "" %>
+                        data-open-selection
+                        data-problem-id="<%= problem.id %>"
+                        data-problem-title="<%= problem.title %>"
+                        data-problem-domain="<%= problem.domain %>"
+                        data-problem-count="<%= problem.teamCount %>"
+                        data-problem-limit="<%= teamLimit %>"
+                      >
+                        <%= problem.isFull ? "Slots Filled" : "Select Problem" %>
+                      </button>
+                    <% } %>
+
+                    <p class="selection-help">
+                      <% if (participantSelection && Number(participantSelection.problemId) === Number(problem.id)) { %>
+                        This is your team’s final saved choice.
+                      <% } else if (participantSelection) { %>
+                        Your team already selected another problem statement.
+                      <% } else if (problem.isFull) { %>
+                        Choose another open statement from the list.
+                      <% } else if (!participant) { %>
+                        Open your participant account first, then return here to confirm a choice.
+                      <% } else { %>
+                        Best for teams who are ready to confirm their choice now.
+                      <% } %>
+                    </p>
+                  </aside>
+                </article>
+          <% }) %>
+        </div>
+      </main>
+
+      <p id="empty-state" class="empty-state" <%= problems.length === 0 ? "" : "hidden" %>>No problem statements match your current filters.</p>
+    </div>
+
+    <dialog id="selection-modal" class="modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Final Confirmation</p>
+            <h2 id="modal-title">Select a problem</h2>
+          </div>
+          <button type="button" class="icon-button" data-close-modal aria-label="Close">×</button>
+        </div>
+
+        <div class="modal-meta">
+          <span id="modal-domain" class="pill"></span>
+          <span id="modal-count" class="pill pill-muted"></span>
+        </div>
+
+        <form method="post" action="/select" class="stack-form">
+          <input type="hidden" name="problemId" id="modal-problem-id" />
+          <div class="confirm-summary">
+            <span class="account-label">Team</span>
+            <strong><%= participant ? participant.teamName : "" %></strong>
+            <span class="muted-copy">Email: <%= participant ? participant.emailAddress : "" %></span>
+            <span class="muted-copy">Mobile: <%= participant ? participant.mobileNumber : "" %></span>
+          </div>
+          <p class="muted-copy">Once you confirm this selection, editing will be disabled for this participant account.</p>
+
+          <div class="action-row">
+            <button type="submit" class="primary-button">Confirm and Lock Selection</button>
+            <button type="button" class="secondary-button" data-close-modal>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <% if (!participant) { %>
+      <dialog
+        id="signup-modal"
+        class="modal auth-modal"
+        <%= flash ? 'data-auth-auto-open="true"' : "" %>
+      >
+        <div class="modal-card auth-modal-card">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Participant Signup</p>
+              <h2>Create your participant account</h2>
+            </div>
+            <button type="button" class="icon-button" data-close-signup aria-label="Close">×</button>
+          </div>
+
+          <section class="auth-panel active">
+            <p class="muted-copy">Create your participant account, then choose one final problem statement.</p>
+            <form method="post" action="/participant/signup" class="stack-form">
+              <label>
+                Name
+                <input type="text" name="teamName" placeholder="Jane Doe" required />
+              </label>
+              <label>
+                Email Address
+                <input type="email" name="emailAddress" placeholder="jane@example.com" required />
+              </label>
+              <label>
+                Mobile Number
+                <input type="tel" name="mobileNumber" placeholder="9876543210" maxlength="10" required />
+              </label>
+              <label>
+                Password
+                <input type="password" name="password" placeholder="Minimum 6 characters" required />
+              </label>
+              <label>
+                Confirm Password
+                <input type="password" name="confirmPassword" placeholder="Re-enter password" required />
+              </label>
+              <button type="submit" class="primary-button">Create Account</button>
+            </form>
+            <div class="auth-inline-switch">
+              <span class="muted-copy">Already registered?</span>
+              <button type="button" class="text-button" data-open-login>Open Login</button>
+            </div>
+          </section>
+        </div>
+      </dialog>
+
+      <dialog
+        id="login-modal"
+        class="modal auth-modal"
+        <%= flash ? 'data-login-auto-open="true"' : "" %>
+      >
+        <div class="modal-card auth-modal-card">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Participant Login</p>
+              <h2>Log in to your participant account</h2>
+            </div>
+            <button type="button" class="icon-button" data-close-login aria-label="Close">×</button>
+          </div>
+
+          <section class="auth-panel active">
+            <p class="muted-copy">Log in with your registered mobile number to continue your team selection.</p>
+            <form method="post" action="/participant/login" class="stack-form">
+              <label>
+                Mobile Number
+                <input type="tel" name="mobileNumber" placeholder="9876543210" maxlength="10" required />
+              </label>
+              <label>
+                Password
+                <input type="password" name="password" placeholder="Enter password" required />
+              </label>
+              <button type="submit" class="primary-button">Login</button>
+            </form>
+            <div class="auth-inline-switch">
+              <span class="muted-copy">New participant?</span>
+              <button type="button" class="text-button" data-open-signup>Open Signup</button>
+            </div>
+          </section>
+        </div>
+      </dialog>
+    <% } %>
+
+    <script src="/scripts/app.js?v=<%= assetVersion %>"></script>
+  </body>
+</html>

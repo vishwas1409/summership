@@ -1,0 +1,37 @@
+<header class="site-header">
+  <a href="/" class="brand">
+    <span class="brand-badge brand-badge-logo">
+      <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills logo" class="brand-badge-image" />
+    </span>
+    <span>
+      <strong>GradSkills</strong>
+      <small>Summership selection board</small>
+    </span>
+  </a>
+
+  <% if (admin) { %>
+    <nav class="site-nav">
+      <form method="post" action="/admin/logout">
+        <button type="submit" class="nav-button">Logout</button>
+      </form>
+    </nav>
+  <% } else if (participant) { %>
+    <nav class="site-nav">
+      <span class="nav-badge">Team: <%= participant.teamName %></span>
+      <a href="#participant-access">Profile</a>
+      <form method="post" action="/participant/logout">
+        <button type="submit" class="nav-button">Logout</button>
+      </form>
+    </nav>
+  <% } else { %>
+    <nav class="site-nav">
+      <div class="header-status">
+        <span class="header-dot"></span>
+        <span>Participant selection is live</span>
+      </div>
+      <button type="button" class="nav-button nav-link-button" data-open-login>Login</button>
+      <button type="button" class="nav-button" data-open-signup>Signup</button>
+    </nav>
+  <% } %>
+  <button id="back-to-top" class="back-to-top" aria-label="Back to top">&#8593; Top</button>
+</header>

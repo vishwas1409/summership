@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" />
+    <link rel="stylesheet" href="/styles/main.css?v=<%= assetVersion %>" />
+  </head>
+  <body class="auth-body">
+    <div class="auth-layout">
+      <section class="auth-copy">
+        <p class="eyebrow">Admin Access</p>
+        <h1>Manage problem statements from one clean control panel.</h1>
+        <p>
+          Add new challenges, monitor how many teams picked each statement, and keep the public list accurate as registrations come in.
+        </p>
+        <div class="auth-feature-list">
+          <article>
+            <strong>Secure login</strong>
+            <span>Session-based admin authentication with bcrypt password hashing.</span>
+          </article>
+          <article>
+            <strong>Database-backed workflow</strong>
+            <span>Problem statements and team selections are stored in MySQL for deployment on Hostinger.</span>
+          </article>
+          <article>
+            <strong>Live capacity tracking</strong>
+            <span>Each problem stops accepting teams automatically once it reaches 40 selections.</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="auth-card">
+        <a href="/" class="back-link">← Back to participant portal</a>
+        <%- include("partials/flash") %>
+        <p class="panel-kicker">Admin Login</p>
+        <h2>Sign in</h2>
+        <form method="post" action="/admin/login" class="stack-form">
+          <label>
+            Username
+            <input type="text" name="username" placeholder="admin" required />
+          </label>
+          <label>
+            Password
+            <input type="password" name="password" placeholder="Enter password" required />
+          </label>
+          <button type="submit" class="primary-button">Open Dashboard</button>
+        </form>
+      </section>
+    </div>
+  </body>
+</html>

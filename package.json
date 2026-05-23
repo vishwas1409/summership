@@ -1,0 +1,26 @@
+{
+  "name": "hackathon-problem-selection",
+  "version": "1.0.0",
+  "description": "Hostinger-ready Node.js app for hackathon problem statement selection.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
+    "dotenv": "^17.4.1",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "express-mysql-session": "^3.0.3",
+    "express-rate-limit": "^6.8.0",
+    "express-session": "^1.19.0",
+    "helmet": "^8.2.0",
+    "mysql2": "^3.20.0",
+    "xlsx": "^0.18.5"
+  }
+}

@@ -1,0 +1,18 @@
+# Turn on the rewrite engine
+RewriteEngine On
+
+# DO NOT rewrite if the file or directory actually exists in public_html
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Proxy all other requests to the local Node.js server
+# IMPORTANT: If your host (like Hostinger) assigns a specific port, replace 3000 with that port.
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+
+# Alternatively, if you are using Phusion Passenger on cPanel/Hostinger:
+# PassengerAppRoot /home/username/public_html
+# PassengerBaseURI /
+# PassengerNodejs /usr/bin/node
+# PassengerAppType node
+# PassengerStartupFile server.js

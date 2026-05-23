@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" />
+    <link rel="stylesheet" href="/styles/main.css?v=<%= assetVersion %>" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/header") %>
+      <%- include("partials/flash") %>
+
+      <section class="hero hero-admin">
+        <div class="hero-copy">
+          <p class="eyebrow">Admin Dashboard</p>
+          <h1>Manage problem statements and team selections.</h1>
+          <p class="hero-text">
+            Add new statements, review team selections, and keep the public list updated.
+          </p>
+          <div class="stat-grid">
+            <article class="stat-card">
+              <span>Total Problems</span>
+              <strong><%= stats.totalProblems %></strong>
+            </article>
+            <article class="stat-card">
+              <span>Active Problems</span>
+              <strong><%= stats.activeProblems %></strong>
+            </article>
+            <article class="stat-card">
+              <span>Total Teams</span>
+              <strong><%= stats.totalSelections %></strong>
+            </article>
+            <article class="stat-card">
+              <span>Full Problems</span>
+              <strong><%= stats.fullProblems %></strong>
+            </article>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <p class="panel-kicker">Quick Add</p>
+          <h2>Add a new problem statement</h2>
+          <form method="post" action="/admin/problems" class="stack-form">
+            <label>
+              Problem Code
+              <input type="text" name="problemCode" placeholder="01" maxlength="20" />
+            </label>
+            <label>
+              Problem Title
+              <input type="text" name="title" placeholder="Smart Energy Route Optimizer" required />
+            </label>
+            <label>
+              Domain
+              <select name="domain" required>
+                <option value="">Choose a domain</option>
+                <% domains.forEach((domain) => { %>
+                  <option value="<%= domain %>"><%= domain %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label>
+              Description
+              <textarea name="description" rows="3" placeholder="Write a short overview that introduces the challenge and why it matters." required></textarea>
+            </label>
+            <label>
+              Persona
+              <textarea name="persona" rows="2" placeholder="Local business owners, teachers, hospital care coordinators"></textarea>
+            </label>
+            <label>
+              Problem Statement
+              <textarea name="problemStatement" rows="4" placeholder="Describe the core problem in the structured style you want to show on the public card."></textarea>
+            </label>
+            <label>
+              Solution Idea
+              <textarea name="solutionIdea" rows="4" placeholder="Describe the proposed product or workflow that could solve the problem."></textarea>
+            </label>
+            <label>
+              Why Selected
+              <textarea name="whySelected" rows="3" placeholder="Explain why this problem is valuable, relevant, or high-impact."></textarea>
+            </label>
+            <label>
+              Key Technologies
+              <textarea name="keyTechnologies" rows="4" placeholder="Enter one technology per line&#10;LLM workflow automation&#10;Sentiment analysis&#10;API integrations"></textarea>
+            </label>
+            <button type="submit" class="primary-button">Upload Problem Statement</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel-card">
+          <div class="panel-card-heading">
+            <div>
+              <p class="panel-kicker">Summary</p>
+              <h2>Selections by domain</h2>
+            </div>
+          </div>
+          <div class="summary-list">
+            <% if (domainSummary.length === 0) { %>
+              <p class="muted-copy">No selections yet.</p>
+            <% } %>
+            <% domainSummary.forEach((item) => { %>
+              <div class="summary-row">
+                <span><%= item.domain %></span>
+                <strong><%= item.teamCount %> teams</strong>
+              </div>
+            <% }) %>
+          </div>
+        </article>
+
+        <article class="panel-card panel-card-wide">
+          <div class="panel-card-heading">
+            <div>
+              <p class="panel-kicker">Recent Activity</p>
+              <h2>Latest registrations</h2>
+            </div>
+          </div>
+          <div class="summary-list">
+            <% if (recentSelections.length === 0) { %>
+              <p class="muted-copy">No team registrations yet.</p>
+            <% } %>
+            <% recentSelections.forEach((item) => { %>
+              <div class="summary-row summary-row-spread">
+                <div>
+                  <strong><%= item.teamName %></strong>
+                  <span><%= item.problemTitle %> · <%= item.problemDomain %></span>
+                </div>
+                <small><%= item.emailAddress %> · <%= item.mobileNumber %></small>
+              </div>
+            <% }) %>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel-card selections-panel">
+        <div class="panel-card-heading">
+          <div>
+            <p class="panel-kicker">Participant Selections</p>
+            <h2>All team selections</h2>
+          </div>
+          <div class="selection-actions">
+            <a href="/admin/selections/export.csv" class="secondary-button">Export CSV</a>
+            <a href="/admin/selections/export.xlsx" class="primary-button">Export Excel</a>
+          </div>
+        </div>
+
+        <% if (allSelections.length === 0) { %>
+          <p class="muted-copy">No participant selections have been submitted yet.</p>
+        <% } else { %>
+          <div class="selection-toolbar">
+            <label class="search-field selection-search">
+                <span class="search-label">Search teams or statements</span>
+                <input
+                  id="selection-search"
+                  type="search"
+                  placeholder="Search by team name, email, mobile number, or problem statement"
+                />
+              </label>
+            <label class="select-field selection-filter">
+              <span class="search-label">Filter by domain</span>
+              <select id="selection-domain-filter">
+                <option value="all">All domains</option>
+                <% domains.forEach((domain) => { %>
+                  <option value="<%= domain %>"><%= domain %></option>
+                <% }) %>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table class="selection-table" id="selection-table">
+              <thead>
+                <tr>
+                  <th>Team Name</th>
+                  <th>Email Address</th>
+                  <th>Mobile Number</th>
+                  <th>Problem Statement</th>
+                  <th>Domain</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="selection-table-body">
+                <% allSelections.forEach((item) => { %>
+                  <tr
+                    data-selection-row
+                    data-selection-domain="<%= item.problemDomain.toLowerCase() %>"
+                    data-selection-search="<%= `${item.teamName} ${item.emailAddress} ${item.mobileNumber} ${item.problemTitle} ${item.problemDomain}`.toLowerCase() %>"
+                  >
+                    <td><strong><%= item.teamName %></strong></td>
+                    <td><%= item.emailAddress %></td>
+                    <td><%= item.mobileNumber %></td>
+                    <td><%= item.problemTitle %></td>
+                    <td><span class="pill pill-muted"><%= item.problemDomain %></span></td>
+                    <td>
+                      <details class="edit-panel edit-panel-table">
+                        <summary>Edit</summary>
+                        <form method="post" action="/admin/selections/<%= item.id %>/update" class="stack-form">
+                          <label>
+                            Team Name
+                            <input type="text" name="teamName" value="<%= item.teamName %>" required />
+                          </label>
+                          <label>
+                            Email Address
+                            <input type="email" name="emailAddress" value="<%= item.emailAddress %>" required />
+                          </label>
+                          <label>
+                            Mobile Number
+                            <input type="tel" name="mobileNumber" value="<%= item.mobileNumber %>" maxlength="10" required />
+                          </label>
+                          <label>
+                            Problem Statement
+                            <select name="problemId" required>
+                              <% problems.forEach((problem) => { %>
+                                <option value="<%= problem.id %>" <%= Number(problem.id) === Number(item.problemId) ? "selected" : "" %>>
+                                  <%= `${problem.problemCode ? `#${problem.problemCode} ` : ""}${problem.title} (${problem.domain})` %>
+                                </option>
+                              <% }) %>
+                            </select>
+                          </label>
+                          <button type="submit" class="primary-button">Save</button>
+                        </form>
+                      </details>
+                      <form method="post" action="/admin/selections/<%= item.id %>/delete">
+                        <button
+                          type="submit"
+                          class="danger-button table-delete-button"
+                          onclick="return confirm('Delete this team selection?')"
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+
+          <p id="selection-empty-state" class="muted-copy selection-empty" hidden>
+            No team selections match the current search or filter.
+          </p>
+        <% } %>
+      </section>
+
+      <section class="manage-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Manage Statements</p>
+            <h2>Edit or remove uploaded problems</h2>
+          </div>
+        </div>
+
+        <div class="manage-grid">
+          <% problems.forEach((problem) => { %>
+            <article class="manage-card">
+              <div class="problem-card-heading">
+                <div class="problem-top">
+                  <span class="pill"><%= problem.domain %></span>
+                  <span class="pill pill-<%= Number(problem.isActive) === 1 ? "success" : "muted" %>">
+                    <%= Number(problem.isActive) === 1 ? "Active" : "Hidden" %>
+                  </span>
+                </div>
+                <h3><%= problem.title %></h3>
+                <% if (problem.problemCode) { %>
+                  <p class="problem-card-code">Code: #<%= problem.problemCode %></p>
+                <% } %>
+              </div>
+
+              <% if (problem.problemCode) { %>
+                <p class="screen-reader-copy">Code: #<%= problem.problemCode %></p>
+              <% } %>
+
+              <p class="problem-lead"><%= problem.description %></p>
+
+              <div class="manage-preview-list">
+                <% if (problem.persona) { %>
+                  <div class="manage-preview-item">
+                    <span class="manage-preview-label">Persona</span>
+                    <p><%= problem.persona %></p>
+                  </div>
+                <% } %>
+
+                <% if (problem.problemStatement) { %>
+                  <div class="manage-preview-item">
+                    <span class="manage-preview-label">Problem Statement</span>
+                    <p><%= problem.problemStatement %></p>
+                  </div>
+                <% } %>
+
+                <% if (problem.solutionIdea) { %>
+                  <div class="manage-preview-item">
+                    <span class="manage-preview-label">Solution Idea</span>
+                    <p><%= problem.solutionIdea %></p>
+                  </div>
+                <% } %>
+
+                <% if (problem.keyTechnologyList.length > 0) { %>
+                  <div class="manage-preview-item">
+                    <span class="manage-preview-label">Key Technologies</span>
+                    <div class="problem-tech-list">
+                      <% problem.keyTechnologyList.forEach((technology) => { %>
+                        <span class="tech-pill"><%= technology %></span>
+                      <% }) %>
+                    </div>
+                  </div>
+                <% } %>
+              </div>
+
+              <% if (problem.whySelected) { %>
+                <p class="manage-meta"><strong>Why selected:</strong> <%= problem.whySelected %></p>
+              <% } %>
+
+              <div class="availability-block compact">
+                <div class="availability-copy">
+                  <strong><%= problem.teamCount %>/<%= teamLimit %> teams selected</strong>
+                  <span>Updated automatically from the database</span>
+                </div>
+              </div>
+
+              <div class="manage-card-actions">
+                <details class="edit-panel">
+                  <summary>Edit this problem</summary>
+                  <form method="post" action="/admin/problems/<%= problem.id %>/update" class="stack-form">
+                    <label>
+                      Problem Code
+                      <input type="text" name="problemCode" value="<%= problem.problemCode || "" %>" maxlength="20" />
+                    </label>
+                    <label>
+                      Title
+                      <input type="text" name="title" value="<%= problem.title %>" required />
+                    </label>
+                    <label>
+                      Domain
+                      <select name="domain" required>
+                        <% domains.forEach((domain) => { %>
+                          <option value="<%= domain %>" <%= domain === problem.domain ? "selected" : "" %>><%= domain %></option>
+                        <% }) %>
+                      </select>
+                    </label>
+                    <label>
+                      Description
+                      <textarea name="description" rows="4" required><%= problem.description %></textarea>
+                    </label>
+                    <label>
+                      Persona
+                      <textarea name="persona" rows="2"><%= problem.persona || "" %></textarea>
+                    </label>
+                    <label>
+                      Problem Statement
+                      <textarea name="problemStatement" rows="4"><%= problem.problemStatement || "" %></textarea>
+                    </label>
+                    <label>
+                      Solution Idea
+                      <textarea name="solutionIdea" rows="4"><%= problem.solutionIdea || "" %></textarea>
+                    </label>
+                    <label>
+                      Why Selected
+                      <textarea name="whySelected" rows="3"><%= problem.whySelected || "" %></textarea>
+                    </label>
+                    <label>
+                      Key Technologies
+                      <textarea name="keyTechnologies" rows="4"><%= problem.keyTechnologyList.join("\n") %></textarea>
+                    </label>
+                    <label class="checkbox-row">
+                      <input type="checkbox" name="isActive" value="1" <%= Number(problem.isActive) === 1 ? "checked" : "" %> />
+                      Keep this problem visible on the public portal
+                    </label>
+                    <button type="submit" class="primary-button">Save Changes</button>
+                  </form>
+                </details>
+
+                <form method="post" action="/admin/problems/<%= problem.id %>/delete">
+                  <button type="submit" class="danger-button" onclick="return confirm('Delete this problem statement?')">Delete Problem</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    </div>
+    <script src="/scripts/app.js?v=<%= assetVersion %>"></script>
+  </body>
+</html>

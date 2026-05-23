@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" />
+    <link rel="stylesheet" href="/styles/main.css?v=<%= assetVersion %>" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/header") %>
+      <section class="error-card">
+        <p class="eyebrow">Server Error</p>
+        <h1>Something went wrong</h1>
+        <p><%= message %></p>
+        <a class="primary-button" href="/">Back to Home</a>
+      </section>
+    </div>
+  </body>
+</html>

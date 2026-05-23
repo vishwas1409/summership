@@ -1,3 +1,6 @@
-# Railway auto-detects docker-compose.yml and provisions app + MySQL services.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
 [deploy]
 restartPolicyType = "ON_FAILURE"

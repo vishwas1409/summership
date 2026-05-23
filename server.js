@@ -158,7 +158,9 @@ function resolveDbConfig() {
     process.env.DB_HOST ||
     process.env.MYSQLHOST ||
     process.env.MYSQL_HOST ||
-    "localhost";
+    (process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PROJECT_ID
+      ? "127.0.0.1"
+      : "localhost");
   const isRemoteHost = host && !["localhost", "127.0.0.1"].includes(host);
 
   return {

@@ -219,6 +219,8 @@ button {
 
 .hero-home {
   grid-template-columns: 1fr;
+  background: #000000;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .hero-admin {
@@ -234,22 +236,9 @@ button {
   pointer-events: none;
 }
 
-.hero-home::before {
-  width: 320px;
-  height: 320px;
-  right: -80px;
-  top: -90px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 95, 109, 0.35), transparent 70%);
-}
-
+.hero-home::before,
 .hero-home::after {
-  width: 440px;
-  height: 440px;
-  left: -120px;
-  bottom: -180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(184, 51, 225, 0.28), transparent 70%);
+  display: none;
 }
 
 .eyebrow,
@@ -327,6 +316,16 @@ h1 {
 .hero-home h1 {
   max-width: 22ch;
   text-wrap: balance;
+  color: #ffffff;
+}
+
+.hero-home h1 .hero-highlight {
+  color: #000000;
+  background: #ffffff;
+  padding: 0 0.14em;
+  border-radius: 8px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .hero-home .hero-text,
@@ -341,17 +340,13 @@ h1 {
   margin-bottom: 14px;
   padding: 10px 16px;
   border-radius: 999px;
-  background: var(--gradient-logo);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.24em;
-}
-
-.hero-highlight {
-  display: inline-block;
-  color: #000000;
 }
 
 .hero-meta-row {

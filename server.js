@@ -1350,18 +1350,39 @@ app.use((error, req, res, next) => {
   });
 });
 
-async function verifyDatabaseConnection() {
-  try {
-    await pool.query("SELECT 1");
-  } catch (error) {
-    const dbConfig = resolveDbConfig();
-    const details = [error.message, error.code, `host=${dbConfig.host}`, `database=${dbConfig.database}`]
-      .filter(Boolean)
-      .join(" | ");
-    throw new Error(
-      `Database connection failed (${details}). Configure DB_HOST, DB_USER, DB_PASSWORD, DB_NAME or link Railway MySQL (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE).`
-    );
+async function verifyDatabaseConnection(retries = 20, delayMs = 3000) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      await pool.query("SELECT 1");
+      if (attempt > 1) {
+        console.log(`Database ready after ${attempt} attempts.`);
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) {
+        console.warn(
+          `Database not ready (${attempt}/${retries}): ${error.code || error.message || "unknown error"}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
   }
+
+  const dbConfig = resolveDbConfig();
+  const details = [
+    lastError?.message,
+    lastError?.code,
+    `host=${dbConfig.host}`,
+    `database=${dbConfig.database}`,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+  throw new Error(
+    `Database connection failed (${details}). Configure DB_HOST, DB_USER, DB_PASSWORD, DB_NAME or link Railway MySQL (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE).`
+  );
 }
 
 async function startServer() {

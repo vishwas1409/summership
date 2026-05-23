@@ -1,7 +1,3 @@
-[build]
-builder = "NIXPACKS"
-buildCommand = "npm install"
-
+# Railway auto-detects docker-compose.yml and provisions app + MySQL services.
 [deploy]
-startCommand = "npm start"
 restartPolicyType = "ON_FAILURE"

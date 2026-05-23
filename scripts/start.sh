@@ -17,7 +17,7 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 fi
 
 echo "Starting embedded MariaDB..."
-mariadbd --user=mysql --bind-address=127.0.0.1 --datadir=/var/lib/mysql &
+mariadbd --user=mysql --bind-address=127.0.0.1 --datadir=/var/lib/mysql --skip-grant-tables &
 MYSQL_PID=$!
 
 for attempt in $(seq 1 60); do
@@ -33,7 +33,7 @@ for attempt in $(seq 1 60); do
   sleep 1
 done
 
-mariadb -h 127.0.0.1 -uroot -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+mariadb -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
 
 echo "Starting Node app on port ${PORT:-3000}..."
 exec node server.js

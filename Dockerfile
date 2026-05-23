@@ -1,8 +1,4 @@
-FROM node:20-bookworm-slim
-
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends mariadb-server \
-  && rm -rf /var/lib/apt/lists/*
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -11,15 +7,8 @@ RUN npm ci --omit=dev
 
 COPY . .
 
-RUN chmod +x scripts/start.sh
-
 ENV NODE_ENV=production
-ENV DB_HOST=127.0.0.1
-ENV DB_PORT=3306
-ENV DB_USER=hackathon
-ENV DB_PASSWORD=hackathon_root
-ENV DB_NAME=hackathon_selection
 
 EXPOSE 3000
 
-CMD ["scripts/start.sh"]
+CMD ["npm", "start"]

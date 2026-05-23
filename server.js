@@ -133,6 +133,14 @@ const DEFAULT_PROBLEM_CATALOG = [
   },
 ];
 
+function isRailway() {
+  return Boolean(
+    process.env.RAILWAY_ENVIRONMENT_NAME ||
+    process.env.RAILWAY_PROJECT_ID ||
+    process.env.RAILWAY_SERVICE_ID
+  );
+}
+
 function resolveDbConfig() {
   const connectionUrl =
     process.env.DATABASE_URL || process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL;
@@ -144,9 +152,9 @@ function resolveDbConfig() {
       return {
         host,
         port: Number(parsed.port || 3306),
-        user: decodeURIComponent(parsed.username || "root"),
+        user: decodeURIComponent(parsed.username || ""),
         password: decodeURIComponent(parsed.password || ""),
-        database: decodeURIComponent(parsed.pathname.replace(/^\//, "") || "hackathon_selection"),
+        database: decodeURIComponent(parsed.pathname.replace(/^\//, "") || "railway"),
         ssl: host && !["localhost", "127.0.0.1"].includes(host) ? { rejectUnauthorized: false } : undefined,
       };
     } catch (error) {
@@ -154,29 +162,56 @@ function resolveDbConfig() {
     }
   }
 
-  const host =
-    process.env.DB_HOST ||
-    process.env.MYSQLHOST ||
-    process.env.MYSQL_HOST ||
-    (process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PROJECT_ID
-      ? "127.0.0.1"
-      : "localhost");
-  const isRemoteHost = host && !["localhost", "127.0.0.1"].includes(host);
+  const mysqlHost = process.env.MYSQLHOST || process.env.MYSQL_HOST;
+  const mysqlUser = process.env.MYSQLUSER || process.env.MYSQL_USER;
+  const mysqlPassword = process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD;
+  const mysqlDatabase = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE;
+
+  if (mysqlHost || mysqlUser) {
+    if (!mysqlHost || !mysqlUser || mysqlPassword === undefined || !mysqlDatabase) {
+      throw new Error(
+        "Incomplete Railway MySQL variables. Link MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, and MYSQLPORT from your MySQL service."
+      );
+    }
+
+    return {
+      host: mysqlHost,
+      port: Number(process.env.MYSQLPORT || process.env.MYSQL_PORT || 3306),
+      user: mysqlUser,
+      password: mysqlPassword,
+      database: mysqlDatabase,
+      ssl: { rejectUnauthorized: false },
+    };
+  }
+
+  if (process.env.DB_HOST || process.env.DB_USER) {
+    const host = process.env.DB_HOST || "localhost";
+    const isRemoteHost = host && !["localhost", "127.0.0.1"].includes(host);
+    return {
+      host,
+      port: Number(process.env.DB_PORT || 3306),
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD || "",
+      database: process.env.DB_NAME || "hackathon_selection",
+      ssl:
+        process.env.DB_SSL === "true" || (isProduction && isRemoteHost)
+          ? { rejectUnauthorized: false }
+          : undefined,
+    };
+  }
+
+  if (isRailway()) {
+    throw new Error(
+      "Railway MySQL is not connected. In Railway: + New → Database → MySQL, then on your web service → Variables → Add Reference → select MySQL (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, MYSQLPORT)."
+    );
+  }
 
   return {
-    host,
-    port: Number(process.env.DB_PORT || process.env.MYSQLPORT || process.env.MYSQL_PORT || 3306),
-    user: process.env.DB_USER || process.env.MYSQLUSER || process.env.MYSQL_USER || "root",
-    password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD || "",
-    database:
-      process.env.DB_NAME ||
-      process.env.MYSQLDATABASE ||
-      process.env.MYSQL_DATABASE ||
-      "hackathon_selection",
-    ssl:
-      process.env.DB_SSL === "true" || (isProduction && isRemoteHost)
-        ? { rejectUnauthorized: false }
-        : undefined,
+    host: "localhost",
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "hackathon_selection",
   };
 }
 

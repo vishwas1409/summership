@@ -278,6 +278,7 @@ function consumeFlash(req) {
 
 function requireAdmin(req, res, next) {
   if (!req.session.admin) {
+    req.session.redirectTo = req.originalUrl;
     setFlash(req, "error", "Please sign in as admin to continue.");
     return res.redirect("/admin/login");
   }
@@ -1071,7 +1072,9 @@ app.post("/admin/login", adminLoginLimiter, async (req, res, next) => {
     };
 
     setFlash(req, "success", `Welcome back, ${admin.username}.`);
-    return res.redirect("/admin");
+    const redirectTo = req.session.redirectTo || "/admin";
+    delete req.session.redirectTo;
+    return res.redirect(redirectTo);
   } catch (error) {
     return next(error);
   }

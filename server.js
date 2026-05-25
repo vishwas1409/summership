@@ -1466,6 +1466,10 @@ app.get("/api/fetch-selection", async (req, res) => {
   }
 });
 
+app.get("/submission", (req, res) => {
+  return res.redirect("/summership");
+});
+
 app.get("/summership", async (req, res, next) => {
   try {
     let existingSubmission = null;

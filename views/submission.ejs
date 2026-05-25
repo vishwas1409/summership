@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" />
+    <link rel="stylesheet" href="/styles/main.css?v=<%= assetVersion %>" />
+    <!-- jsPDF Library for client-side PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      .submission-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 24px;
+        align-items: start;
+        margin-top: 24px;
+      }
+      
+      .ps-info-card {
+        padding: 24px;
+        border-radius: var(--radius-xl);
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-height: 240px;
+        justify-content: center;
+        transition: border-color 0.3s ease, background 0.3s ease;
+      }
+
+      .ps-info-card.active {
+        background: linear-gradient(135deg, rgba(255, 87, 87, 0.04) 0%, rgba(140, 82, 255, 0.04) 100%);
+        border-color: rgba(140, 82, 255, 0.25);
+      }
+
+      .ps-placeholder-text {
+        text-align: center;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .ps-details {
+        display: none;
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .ps-details h3 {
+        margin: 0 0 10px;
+        font-size: 1.5rem;
+        color: #ffffff;
+      }
+
+      .ps-details p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.98rem;
+      }
+
+      .fetch-loader {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        color: var(--brand-deep);
+        font-weight: 700;
+      }
+
+      .fetch-loader::after {
+        content: "";
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(140, 82, 255, 0.1);
+        border-top-color: var(--brand-deep);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Certificate Section Styles */
+      .cert-container {
+        margin-top: 32px;
+        padding: 32px;
+        border-radius: var(--radius-xl);
+        background: var(--surface-solid);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        display: none;
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      .cert-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .cert-header h2 {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #ff5757 0%, #8c52ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .cert-header p {
+        color: var(--muted);
+        font-size: 1rem;
+        max-width: 60ch;
+        margin: 0 auto;
+      }
+
+      .cert-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+
+      .cert-controls label {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        font-size: 0.92rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .cert-controls select {
+        width: auto;
+        min-width: 220px;
+      }
+
+      .cert-preview-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto 24px;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        background: #050505;
+      }
+
+      #cert-canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .cert-actions {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .cert-actions button {
+        min-width: 180px;
+      }
+
+      .cert-locked-placeholder {
+        margin-top: 32px;
+        padding: 40px;
+        border-radius: var(--radius-xl);
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px dashed rgba(255, 255, 255, 0.08);
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .cert-locked-placeholder strong {
+        display: block;
+        font-size: 1.2rem;
+        color: #ffffff;
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 980px) {
+        .submission-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/header") %>
+      <%- include("partials/flash") %>
+
+      <div class="hero hero-home" style="min-height: auto; padding: 24px 34px; background: linear-gradient(135deg, #111827 0%, #030712 100%); border-color: var(--line);">
+        <div class="hero-copy">
+          <p class="eyebrow">Project Submission</p>
+          <h1 style="max-width: 100%; font-size: clamp(2rem, 3.5vw, 2.8rem);">Summership Selection Board</h1>
+          <p class="hero-text" style="margin-top: 8px;">
+            Confirm your registered mobile number below to automatically verify your locked problem statement and submit your project deliverables.
+          </p>
+        </div>
+      </div>
+
+      <div class="submission-layout">
+        <section class="controls-card" style="margin-top: 0;">
+          <div class="controls-head">
+            <div>
+              <p class="eyebrow">Deliverables Form</p>
+              <h2>Enter Submission Links</h2>
+            </div>
+          </div>
+
+          <form id="submission-form" method="post" action="/summership-submission1" class="stack-form" style="margin-top: 24px;">
+            <!-- Problem Statement Hidden ID Field -->
+            <input type="hidden" name="problemId" id="problem-id-hidden" value="<%= typeof existingSubmission !== 'undefined' && existingSubmission ? existingSubmission.problemId : '' %>" required />
+
+            <label>
+              Phone Number (Registered Mobile Number)
+              <input 
+                type="tel" 
+                name="mobileNumber" 
+                id="mobile-number-input"
+                placeholder="Enter 10-digit phone number used during selection" 
+                maxlength="10"
+                value="<%= participant ? participant.mobileNumber : '' %>"
+                required 
+              />
+            </label>
+
+            <label>
+              GitHub URL of Code
+              <input 
+                type="url" 
+                name="githubUrl" 
+                id="github-url-input"
+                placeholder="https://github.com/username/repository" 
+                value="<%= typeof existingSubmission !== 'undefined' && existingSubmission ? existingSubmission.githubUrl : '' %>"
+                required 
+              />
+            </label>
+
+            <label>
+              Deployed Application URL
+              <input 
+                type="url" 
+                name="deployedUrl" 
+                id="deployed-url-input"
+                placeholder="https://your-app.vercel.app" 
+                value="<%= typeof existingSubmission !== 'undefined' && existingSubmission ? existingSubmission.deployedUrl : '' %>"
+                required 
+              />
+            </label>
+
+            <label>
+              LinkedIn Post URL
+              <input 
+                type="url" 
+                name="linkedinUrl" 
+                id="linkedin-url-input"
+                placeholder="https://www.linkedin.com/posts/..." 
+                value="<%= typeof existingSubmission !== 'undefined' && existingSubmission ? existingSubmission.linkedinUrl : '' %>"
+                required 
+              />
+            </label>
+
+            <button type="submit" id="submit-btn" class="primary-button" style="margin-top: 10px;" disabled>
+              <%= existingSubmission ? "Update Deliverables" : "Submit Deliverables" %>
+            </button>
+          </form>
+        </section>
+
+        <aside class="problem-row-aside" style="padding: 0;">
+          <div class="ps-info-card" id="info-card">
+            <div class="fetch-loader" id="loader">
+              <span>Retrieving selection details...</span>
+            </div>
+
+            <div class="ps-placeholder-text" id="placeholder-msg">
+              <strong>Verification Required</strong>
+              <p style="margin-top: 10px; font-size: 0.92rem;">Enter your registered 10-digit phone number in the form to dynamically pull your locked problem statement choice.</p>
+            </div>
+
+            <div class="ps-details" id="ps-info-container">
+              <span class="selection-panel-label" style="margin-bottom: 12px; background: rgba(140, 82, 255, 0.12); color: #c084fc;">Your Selected Problem</span>
+              <h3 id="ps-title">Problem Statement Title</h3>
+              <p id="ps-description">Small description of your selected problem statement solution...</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Live Certificate Claim Section -->
+      <div id="cert-locked-placeholder" class="cert-locked-placeholder" style="margin-top: 32px;">
+        <strong>Certificate of Participation</strong>
+        <p id="cert-placeholder-text">Complete and submit your project deliverables above to instantly unlock your customized certificate.</p>
+        <button type="button" id="open-cert-modal-btn" class="primary-button" style="display: none; margin: 15px auto 0; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">🎉 View & Download Certificate</button>
+      </div>
+
+      <!-- Certificate Display Dialog Modal -->
+      <dialog id="cert-modal" class="modal" style="width: min(840px, calc(100% - 24px));">
+        <div class="modal-card" style="border-color: rgba(140, 82, 255, 0.3); background: rgba(15, 23, 42, 0.98); box-shadow: 0 0 40px rgba(140, 82, 255, 0.15);">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow" style="color: var(--brand-deep); margin-bottom: 8px;">🎉 Deliverables Approved</p>
+              <h2 style="font-size: 1.8rem; line-height: 1.1;">Claim Your Certificate of Participation</h2>
+            </div>
+            <button type="button" class="icon-button" id="close-cert-modal" aria-label="Close">×</button>
+          </div>
+
+          <div style="margin-top: 16px;">
+            <p style="color: var(--muted); font-size: 0.96rem; margin-bottom: 18px;">Your deliverables are securely registered. Customize the font and name layout below, then download your high-resolution certificate.</p>
+            
+            <div class="cert-controls" style="margin-bottom: 18px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--muted);">
+                Name Display:
+                <select id="cert-name-type" style="width: auto; min-width: 180px;">
+                  <option value="leader">Participant Full Name</option>
+                  <option value="team">Team Name</option>
+                </select>
+              </label>
+
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--muted);">
+                Font Style:
+                <select id="cert-font-style" style="width: auto; min-width: 180px;">
+                  <option value="Great Vibes">Classic Calligraphy (Script)</option>
+                  <option value="Playfair Display">Elegant Modern (Serif)</option>
+                  <option value="Montserrat">Bold Corporate (Sans-Serif)</option>
+                  <option value="Fira Sans">Clean Default (Sans-Serif)</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="cert-preview-wrapper" style="margin-bottom: 18px; border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow); overflow: hidden; background: #000;">
+              <canvas id="cert-canvas" style="display: block; width: 100%; height: auto;"></canvas>
+            </div>
+          </div>
+
+          <div class="action-row" style="margin-top: 24px; justify-content: center; display: flex; gap: 16px; flex-wrap: wrap;">
+            <button id="download-jpg-btn" class="primary-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">Download High-Res JPG</button>
+            <button id="download-pdf-btn" class="primary-button">Download Official PDF</button>
+            <button type="button" id="close-cert-btn-secondary" class="secondary-button">Close Preview</button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+
+    <!-- Submission Confirmation Warning Modal -->
+    <dialog id="submission-confirm-modal" class="modal">
+      <div class="modal-card" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(15, 23, 42, 0.98); box-shadow: 0 0 40px rgba(245, 158, 11, 0.15);">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow" style="color: var(--warning); margin-bottom: 8px;">⚠️ Final Validation Checklist</p>
+            <h2 style="font-size: 1.8rem; line-height: 1.1;">Confirm Deliverables Before Lock</h2>
+          </div>
+          <button type="button" class="icon-button" id="close-confirm-modal" aria-label="Close">×</button>
+        </div>
+
+        <div style="margin-top: 18px; display: grid; gap: 14px; color: var(--muted); line-height: 1.6; font-size: 0.96rem;">
+          <p>Please double-check your project deliverables before finalizing. If anything is not up to the mark, <strong>your team may be disqualified from Round 2 selection</strong>.</p>
+          
+          <div class="confirm-summary" style="background: rgba(245, 158, 11, 0.03); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 12px; padding: 18px;">
+            <ul style="margin: 0; padding-left: 20px; display: grid; gap: 12px; color: var(--ink);">
+              <li><strong>GitHub Repository:</strong> Is your repository set to <strong>Public</strong> with all the latest code pushed?</li>
+              <li><strong>Live App URL:</strong> Is your deployed link active and fully functional?</li>
+              <li><strong>LinkedIn Social Post:</strong> Have you detailed your learning journey and <strong>tagged @GradSkills</strong>? <em>(Failure to tag GradSkills or using private posts may prevent our selection bots from indexing your submission, leading to automatic Round 2 disqualification!)</em></li>
+            </ul>
+          </div>
+          
+          <p style="font-size: 0.88rem; color: rgba(255, 255, 255, 0.6);">Once confirmed, your selected problem code and files will be sent to the evaluation pipeline. You can still refine these links before the official submission window closes.</p>
+        </div>
+
+        <div class="action-row" style="margin-top: 24px;">
+          <button type="button" id="confirm-submit-btn" class="primary-button" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.25); border: none;">Yes, Lock and Submit</button>
+          <button type="button" id="cancel-confirm-btn" class="secondary-button">Go Back & Verify</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Hidden template image loader -->
+    <img id="cert-template-img" src="/images/certificate-template.jpg" style="display: none;" />
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const mobileInput = document.getElementById("mobile-number-input");
+        const hiddenProblemId = document.getElementById("problem-id-hidden");
+        const submitBtn = document.getElementById("submit-btn");
+        
+        // Modal DOM elements
+        const submissionForm = document.getElementById("submission-form");
+        const confirmModal = document.getElementById("submission-confirm-modal");
+        const closeConfirmModal = document.getElementById("close-confirm-modal");
+        const confirmSubmitBtn = document.getElementById("confirm-submit-btn");
+        const cancelConfirmBtn = document.getElementById("cancel-confirm-btn");
+        
+        const infoCard = document.getElementById("info-card");
+        const loader = document.getElementById("loader");
+        const placeholderMsg = document.getElementById("placeholder-msg");
+        const psInfoContainer = document.getElementById("ps-info-container");
+        const psTitle = document.getElementById("ps-title");
+        const psDescription = document.getElementById("ps-description");
+
+        // Certificate DOM elements
+        const certPlaceholder = document.getElementById("cert-locked-placeholder");
+        const certPlaceholderText = document.getElementById("cert-placeholder-text");
+        const openCertModalBtn = document.getElementById("open-cert-modal-btn");
+        const certModal = document.getElementById("cert-modal");
+        const closeCertModal = document.getElementById("close-cert-modal");
+        const closeCertBtnSecondary = document.getElementById("close-cert-btn-secondary");
+        const certCanvas = document.getElementById("cert-canvas");
+        const certTemplateImg = document.getElementById("cert-template-img");
+        const certFontStyleSelect = document.getElementById("cert-font-style");
+        const certNameTypeSelect = document.getElementById("cert-name-type");
+        const downloadJpgBtn = document.getElementById("download-jpg-btn");
+        const downloadPdfBtn = document.getElementById("download-pdf-btn");
+
+        let debounceTimeout;
+        let participantLeaderName = "<%= typeof leaderName !== 'undefined' ? leaderName : '' %>";
+        let participantTeamName = "<%= typeof teamName !== 'undefined' ? teamName : '' %>";
+        let hasSubmitted = <%= typeof existingSubmission !== 'undefined' && existingSubmission ? 'true' : 'false' %>;
+
+        // Load custom Google Fonts dynamically so Canvas draws them properly
+        const googleFonts = [
+          { name: "Great Vibes", url: "https://fonts.gstatic.com/s/greatvibes/v15/RWmMoKHY3JJDZdOW9tE1746u.woff2" },
+          { name: "Playfair Display", url: "https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD7K413qaH78BmcgYVEvt2I1qBFhcGy5z.woff2" },
+          { name: "Montserrat", url: "https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" }
+        ];
+
+        async function loadCustomFonts() {
+          for (const f of googleFonts) {
+            try {
+              const font = new FontFace(f.name, `url(${f.url})`);
+              await font.load();
+              document.fonts.add(font);
+            } catch (err) {
+              console.warn("Failed to pre-load Google Font: " + f.name, err);
+            }
+          }
+        }
+
+        // Preload fonts
+        loadCustomFonts();
+
+        // Validation helper for 10-digit number
+        function isValidMobile(num) {
+          return /^[6-9]\d{9}$/.test(num);
+        }
+
+        // Live fetching selection
+        async function fetchSelection(mobileNumber) {
+          if (!isValidMobile(mobileNumber)) {
+            resetInfoCard("Please enter a valid 10-digit registered mobile number.");
+            return;
+          }
+
+          // Show loader
+          placeholderMsg.style.display = "none";
+          psInfoContainer.style.display = "none";
+          loader.style.display = "flex";
+          infoCard.classList.remove("active");
+          submitBtn.disabled = true;
+
+          try {
+            const response = await fetch(`/api/fetch-selection?mobileNumber=${encodeURIComponent(mobileNumber)}`);
+            const data = await response.json();
+
+            loader.style.display = "none";
+
+            if (data.success) {
+              // Fill data
+              hiddenProblemId.value = data.problemId;
+              psTitle.textContent = data.title;
+              psDescription.textContent = data.description;
+
+              // Store name values for certificate preview
+              participantLeaderName = data.leaderName;
+              participantTeamName = data.teamName;
+
+              // Update hasSubmitted status dynamically
+              hasSubmitted = data.hasSubmitted;
+
+              if (hasSubmitted && data.submission) {
+                document.getElementById("github-url-input").value = data.submission.githubUrl || "";
+                document.getElementById("deployed-url-input").value = data.submission.deployedUrl || "";
+                document.getElementById("linkedin-url-input").value = data.submission.linkedinUrl || "";
+                submitBtn.textContent = "Update Deliverables";
+              } else {
+                document.getElementById("github-url-input").value = "";
+                document.getElementById("deployed-url-input").value = "";
+                document.getElementById("linkedin-url-input").value = "";
+                submitBtn.textContent = "Submit Deliverables";
+              }
+
+              // Display details
+              psInfoContainer.style.display = "block";
+              infoCard.classList.add("active");
+              submitBtn.disabled = false;
+
+              // If they have already submitted deliverables, unlock and draw certificate
+              if (hasSubmitted) {
+                unlockCertificate();
+              } else {
+                lockCertificate();
+              }
+            } else {
+              resetInfoCard(data.message);
+            }
+          } catch (error) {
+            console.error(error);
+            loader.style.display = "none";
+            resetInfoCard("Server lookup failed. Please try typing your phone number again.");
+          }
+        }
+
+        function resetInfoCard(message) {
+          hiddenProblemId.value = "";
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Submit Deliverables";
+          infoCard.classList.remove("active");
+
+          document.getElementById("github-url-input").value = "";
+          document.getElementById("deployed-url-input").value = "";
+          document.getElementById("linkedin-url-input").value = "";
+          
+          placeholderMsg.style.display = "block";
+          psInfoContainer.style.display = "none";
+          
+          placeholderMsg.innerHTML = `
+            <strong style="color: var(--danger);">Verification Error</strong>
+            <p style="margin-top: 10px; font-size: 0.92rem; color: var(--muted);">${message}</p>
+          `;
+          lockCertificate();
+        }
+
+        // Phone number input listener
+        mobileInput.addEventListener("input", (e) => {
+          const value = e.target.value.trim();
+          clearTimeout(debounceTimeout);
+
+          if (value.length === 10) {
+            localStorage.setItem("summership_mobile", value);
+            fetchSelection(value);
+          } else {
+            resetInfoCard("Enter your registered 10-digit phone number in the form to dynamically pull your locked problem statement choice.");
+          }
+        });
+
+        // Load mobile number from localStorage if empty (keeps guests state on page refresh)
+        if (!mobileInput.value.trim() && localStorage.getItem("summership_mobile")) {
+          mobileInput.value = localStorage.getItem("summership_mobile");
+        }
+
+        // Trigger lookup immediately on load if number is present
+        if (mobileInput.value.trim().length === 10) {
+          fetchSelection(mobileInput.value.trim());
+        }
+
+        /* Certificate Drawing Engine */
+        function drawCertificate() {
+          if (!certTemplateImg.complete) {
+            certTemplateImg.onload = drawCertificate;
+            return;
+          }
+
+          const ctx = certCanvas.getContext("2d");
+          // Set full landscape high-resolution canvas dimension from template image
+          const width = certTemplateImg.naturalWidth;
+          const height = certTemplateImg.naturalHeight;
+          certCanvas.width = width;
+          certCanvas.height = height;
+
+          // Draw template image as base background
+          ctx.drawImage(certTemplateImg, 0, 0, width, height);
+
+          // Name logic
+          const isTeam = certNameTypeSelect.value === "team";
+          const displayName = isTeam ? participantTeamName : participantLeaderName;
+
+          if (!displayName) return;
+
+          // Choose selected font and size it proportionally to canvas width for perfect high-res sharpness
+          const selectedFont = certFontStyleSelect.value;
+          let fontSizeMultiplier = 0.045; // default size
+
+          if (selectedFont === "Great Vibes") {
+            fontSizeMultiplier = 0.06; // scripts look better slightly larger
+          }
+
+          const fontSize = Math.floor(width * fontSizeMultiplier);
+          const weight = selectedFont === "Great Vibes" ? "normal" : "bold";
+
+          ctx.font = `${weight} ${fontSize}px '${selectedFont}', sans-serif`;
+          ctx.fillStyle = "#111827"; // Dark Charcoal matches the template typography beautifully
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+
+          // Precise target coordinates directly centered above the black underline (vertically at 46.5%)
+          const x = width / 2;
+          const y = height * 0.465;
+
+          // Draw the participant name onto the certificate!
+          ctx.fillText(displayName, x, y);
+        }
+
+        function unlockCertificate() {
+          certPlaceholderText.textContent = "Congratulations! Your project has been submitted successfully and your certificate is ready.";
+          openCertModalBtn.style.display = "inline-flex";
+          drawCertificate();
+          try {
+            certModal.showModal();
+          } catch(e) {}
+        }
+
+        function lockCertificate() {
+          certPlaceholderText.textContent = "Complete and submit your project deliverables above to instantly unlock your customized certificate.";
+          openCertModalBtn.style.display = "none";
+          try {
+            certModal.close();
+          } catch(e) {}
+        }
+
+        // Change handlers
+        certFontStyleSelect.addEventListener("change", drawCertificate);
+        certNameTypeSelect.addEventListener("change", drawCertificate);
+
+        // JPG Download Handler
+        downloadJpgBtn.addEventListener("click", () => {
+          const downloadName = (certNameTypeSelect.value === "team" ? participantTeamName : participantLeaderName) || "Certificate";
+          const dataUrl = certCanvas.toDataURL("image/jpeg", 1.0);
+          
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = `GradSkills_Certificate_${downloadName.replace(/\s+/g, '_')}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+
+        // PDF Download Handler (using client-side jsPDF)
+        downloadPdfBtn.addEventListener("click", () => {
+          const downloadName = (certNameTypeSelect.value === "team" ? participantTeamName : participantLeaderName) || "Certificate";
+          const { jsPDF } = window.jspdf;
+          
+          // Create landscape A4 PDF page (standard landscape certificate size: 297mm x 210mm)
+          const pdf = new jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: "a4"
+          });
+
+          const dataUrl = certCanvas.toDataURL("image/jpeg", 1.0);
+          
+          // Fit image precisely onto A4 landscape canvas (297 width, 210 height)
+          pdf.addImage(dataUrl, "JPEG", 0, 0, 297, 210);
+          pdf.save(`GradSkills_Certificate_${downloadName.replace(/\s+/g, '_')}.pdf`);
+        });
+
+        // Intercept form submission to show confirmation modal
+        submissionForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          confirmModal.showModal();
+        });
+
+        // Modal button listeners
+        closeConfirmModal.addEventListener("click", () => confirmModal.close());
+        cancelConfirmBtn.addEventListener("click", () => confirmModal.close());
+        confirmSubmitBtn.addEventListener("click", () => {
+          confirmModal.close();
+          submissionForm.submit();
+        });
+
+        // Certificate modal button listeners
+        openCertModalBtn.addEventListener("click", () => certModal.showModal());
+        closeCertModal.addEventListener("click", () => certModal.close());
+        closeCertBtnSecondary.addEventListener("click", () => certModal.close());
+
+        // If page loaded with an existing submission, immediately draw it
+        if (hasSubmitted && mobileInput.value.trim().length === 10) {
+          unlockCertificate();
+        }
+      });
+    </script>
+  </body>
+</html>

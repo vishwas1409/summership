@@ -459,6 +459,26 @@ async function ensureParticipantEmailColumns() {
   );
 }
 
+async function ensureSubmissionsTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS submissions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        mobile_number VARCHAR(20) NOT NULL UNIQUE,
+        problem_id INT NOT NULL,
+        github_url VARCHAR(255) NOT NULL,
+        deployed_url VARCHAR(255) NOT NULL,
+        linkedin_url VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_submissions_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+  } catch (error) {
+    console.error("Error ensuring submissions table:", error);
+    throw error;
+  }
+}
+
 async function syncDefaultProblemCatalog() {
   for (const item of DEFAULT_PROBLEM_CATALOG) {
     const [byCode] = await pool.query(
@@ -1382,6 +1402,171 @@ app.post("/admin/selections/:id/update", requireAdmin, async (req, res, next) =>
   }
 });
 
+app.get("/api/fetch-selection", async (req, res) => {
+  const mobileNumber = String(req.query.mobileNumber || "").trim();
+
+  if (!mobileNumber) {
+    return res.json({ success: false, message: "Phone number is required." });
+  }
+
+  if (!validMobileNumber(mobileNumber)) {
+    return res.json({ success: false, message: "Please enter a valid 10-digit mobile number." });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT 
+        ps.problem_id AS problemId, 
+        ps.team_leader_name AS leaderName,
+        ps.team_name AS teamName,
+        p.title AS title, 
+        p.solution_idea AS solutionIdea,
+        p.description AS description
+      FROM problem_selections ps
+      INNER JOIN problems p ON p.id = ps.problem_id
+      WHERE ps.mobile_number = ?
+      LIMIT 1`,
+      [mobileNumber]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ 
+        success: false, 
+        message: "No locked problem selection found for this phone number. Please confirm your selection in the main portal first." 
+      });
+    }
+
+    const selection = rows[0];
+    const smallDescription = (selection.solutionIdea || selection.description || "").trim().slice(0, 300) + "...";
+
+    const [subRows] = await pool.query(
+      `SELECT github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl 
+       FROM submissions 
+       WHERE mobile_number = ? 
+       LIMIT 1`,
+      [mobileNumber]
+    );
+
+    const submissionExists = subRows.length > 0;
+    const submissionData = submissionExists ? subRows[0] : null;
+
+    return res.json({
+      success: true,
+      problemId: selection.problemId,
+      title: selection.title,
+      description: smallDescription,
+      leaderName: selection.leaderName || "",
+      teamName: selection.teamName || "",
+      hasSubmitted: submissionExists,
+      submission: submissionData
+    });
+  } catch (error) {
+    console.error("Error in /api/fetch-selection:", error);
+    return res.status(500).json({ success: false, message: "Database lookup failed. Please try again." });
+  }
+});
+
+app.get("/summership-submission1", async (req, res, next) => {
+  try {
+    let existingSubmission = null;
+    let leaderName = "";
+    let teamName = "";
+    const participant = req.session.participant;
+
+    if (participant && participant.mobileNumber) {
+      const [subRows] = await pool.query(
+        `SELECT problem_id AS problemId, github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl 
+         FROM submissions 
+         WHERE mobile_number = ? 
+         LIMIT 1`,
+        [participant.mobileNumber]
+      );
+
+      if (subRows.length > 0) {
+        existingSubmission = subRows[0];
+      }
+
+      const [selectionRows] = await pool.query(
+        `SELECT team_leader_name AS leaderName, team_name AS teamName 
+         FROM problem_selections 
+         WHERE mobile_number = ? 
+         LIMIT 1`,
+        [participant.mobileNumber]
+      );
+
+      if (selectionRows.length > 0) {
+        leaderName = selectionRows[0].leaderName;
+        teamName = selectionRows[0].teamName;
+      }
+    }
+
+    res.render("submission", {
+      title: "Project Submission | Summership 2026",
+      existingSubmission,
+      leaderName,
+      teamName,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/summership-submission1", async (req, res, next) => {
+  const mobileNumber = String(req.body.mobileNumber || "").trim();
+  const problemId = String(req.body.problemId || "").trim();
+  const githubUrl = String(req.body.githubUrl || "").trim();
+  const deployedUrl = String(req.body.deployedUrl || "").trim();
+  const linkedinUrl = String(req.body.linkedinUrl || "").trim();
+
+  if (!mobileNumber || !problemId || !githubUrl || !deployedUrl || !linkedinUrl) {
+    setFlash(req, "error", "Please fill in all form fields completely.");
+    return res.redirect("/summership-submission1");
+  }
+
+  if (!validMobileNumber(mobileNumber)) {
+    setFlash(req, "error", "Please enter a valid 10-digit mobile number.");
+    return res.redirect("/summership-submission1");
+  }
+
+  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/i;
+  if (!urlRegex.test(githubUrl) || !urlRegex.test(deployedUrl) || !urlRegex.test(linkedinUrl)) {
+    setFlash(req, "error", "Please enter valid URLs starting with http:// or https:// for all link fields.");
+    return res.redirect("/summership-submission1");
+  }
+
+  try {
+    const [selections] = await pool.query(
+      `SELECT id FROM problem_selections WHERE mobile_number = ? AND problem_id = ? LIMIT 1`,
+      [mobileNumber, problemId]
+    );
+
+    if (selections.length === 0) {
+      setFlash(
+        req, 
+        "error", 
+        "We could not verify a locked problem statement selection for this phone number and problem ID. Make sure you select a problem statement in the portal first."
+      );
+      return res.redirect("/summership-submission1");
+    }
+
+    await pool.query(
+      `INSERT INTO submissions (mobile_number, problem_id, github_url, deployed_url, linkedin_url)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         problem_id = VALUES(problem_id),
+         github_url = VALUES(github_url),
+         deployed_url = VALUES(deployed_url),
+         linkedin_url = VALUES(linkedin_url)`,
+      [mobileNumber, problemId, githubUrl, deployedUrl, linkedinUrl]
+    );
+
+    setFlash(req, "success", "Your Summership project submission has been saved successfully! You can update it anytime before the deadline.");
+    return res.redirect("/summership-submission1");
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -1440,6 +1625,7 @@ async function startServer() {
   await ensureProblemBriefColumns();
   await ensureParticipantSelectionSupport();
   await ensureParticipantEmailColumns();
+  await ensureSubmissionsTable();
   await ensureAdminAccount();
   await syncDefaultProblemCatalog();
 

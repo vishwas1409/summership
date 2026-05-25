@@ -52,3 +52,15 @@ CREATE TABLE IF NOT EXISTS problem_selections (
   INDEX idx_problem_selections_problem (problem_id),
   INDEX idx_problem_selections_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS submissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  mobile_number VARCHAR(20) NOT NULL UNIQUE,
+  problem_id INT NOT NULL,
+  github_url VARCHAR(255) NOT NULL,
+  deployed_url VARCHAR(255) NOT NULL,
+  linkedin_url VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_submissions_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

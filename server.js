@@ -1528,8 +1528,16 @@ app.post("/summership-submission1", async (req, res, next) => {
     return res.redirect("/summership-submission1");
   }
 
-  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/i;
-  if (!urlRegex.test(githubUrl) || !urlRegex.test(deployedUrl) || !urlRegex.test(linkedinUrl)) {
+  const isValidUrl = (str) => {
+    try {
+      const u = new URL(str);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  };
+
+  if (!isValidUrl(githubUrl) || !isValidUrl(deployedUrl) || !isValidUrl(linkedinUrl)) {
     setFlash(req, "error", "Please enter valid URLs starting with http:// or https:// for all link fields.");
     return res.redirect("/summership-submission1");
   }

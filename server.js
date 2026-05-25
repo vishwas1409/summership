@@ -30,6 +30,7 @@ const DEFAULT_DOMAINS = [
 const SPONSOR_LOGOS = [
   { src: "/images/sponsors/sponsor-4.jpeg", alt: "CS Coworking logo", name: "CS Coworking", role: "Venue Partner" },
   { src: "https://www.image2url.com/r2/default/images/1779544078309-db6f76de-62e6-49f7-bbbc-e02ed3e291f2.jpg", alt: "Al Ansar logo", name: "Al Ansar", role: "Media Partner" },
+  { src: "https://www.image2url.com/r2/default/images/1779541796671-6c0e10cd-a2db-405e-9670-6022e41f2860.jpg", alt: "CodeQuesters logo", name: "CodeQuesters", role: "Community Partner" },
 ];
 
 const DEFAULT_PROBLEM_CATALOG = [

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" />
+    <link rel="stylesheet" href="/styles/main.css?v=<%= assetVersion %>" />
+    <style>
+      .admin-submissions-hero {
+        background: linear-gradient(135deg, #111827 0%, #030712 100%);
+        border-bottom: 1px solid var(--line);
+        padding: 32px;
+        margin-bottom: 32px;
+        border-radius: var(--radius-xl);
+      }
+      .stat-card-highlight {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.08) 100%);
+        border-color: rgba(10, 185, 129, 0.25);
+      }
+      .url-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      .url-link-github {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #f3f4f6;
+      }
+      .url-link-github:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .url-link-deployed {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+      }
+      .url-link-deployed:hover {
+        background: rgba(59, 130, 246, 0.15);
+      }
+      .url-link-linkedin {
+        background: rgba(14, 118, 168, 0.1);
+        border: 1px solid rgba(14, 118, 168, 0.2);
+        color: #7dd3fc;
+      }
+      .url-link-linkedin:hover {
+        background: rgba(14, 118, 168, 0.15);
+      }
+      .table-url-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/header") %>
+      <%- include("partials/flash") %>
+
+      <section class="admin-submissions-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Submissions Panel</p>
+          <h1>Project Submissions Board</h1>
+          <p class="hero-text" style="max-width: 60ch;">
+            Review live deliverables submitted by team leaders, check code repositories, live links, and verified LinkedIn social posts.
+          </p>
+          
+          <div class="stat-grid" style="margin-top: 24px;">
+            <article class="stat-card stat-card-highlight">
+              <span>Total Submissions</span>
+              <strong><%= submissions.length %></strong>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card selections-panel">
+        <div class="panel-card-heading">
+          <div>
+            <p class="panel-kicker">Submitted Deliverables</p>
+            <h2>All Project Deliverables</h2>
+          </div>
+        </div>
+
+        <% if (submissions.length === 0) { %>
+          <p class="muted-copy" style="text-align: center; padding: 40px 0;">No project deliverables have been submitted yet.</p>
+        <% } else { %>
+          <div class="selection-toolbar">
+            <label class="search-field selection-search">
+              <span class="search-label">Search submissions</span>
+              <input
+                id="submission-search"
+                type="search"
+                placeholder="Search by team name, email, mobile number, problem statement or URLs..."
+              />
+            </label>
+            <label class="select-field selection-filter">
+              <span class="search-label">Filter by domain</span>
+              <select id="submission-domain-filter">
+                <option value="all">All domains</option>
+                <% const uniqueDomains = [...new Set(submissions.map(s => s.problemDomain).filter(Boolean))]; %>
+                <% uniqueDomains.forEach((domain) => { %>
+                  <option value="<%= domain %>"><%= domain %></option>
+                <% }) %>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table class="selection-table" id="submission-table">
+              <thead>
+                <tr>
+                  <th>Participant Full Name</th>
+                  <th>Contact Details</th>
+                  <th>Problem Statement</th>
+                  <th>Deliverables Links</th>
+                  <th>Submission Time</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="submission-table-body">
+                <% submissions.forEach((item) => { %>
+                  <tr
+                    data-submission-row
+                    data-submission-domain="<%= item.problemDomain.toLowerCase() %>"
+                    data-submission-search="<%= `${item.teamName} ${item.emailAddress} ${item.mobileNumber} ${item.problemTitle} ${item.problemDomain} ${item.githubUrl} ${item.deployedUrl} ${item.linkedinUrl}`.toLowerCase() %>"
+                  >
+                    <td>
+                      <strong><%= item.teamName %></strong>
+                    </td>
+                    <td>
+                      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem;">
+                        <span style="color: var(--muted);"><%= item.emailAddress %></span>
+                        <strong style="color: var(--ink);"><%= item.mobileNumber %></strong>
+                      </div>
+                    </td>
+                    <td>
+                      <div style="max-width: 250px;">
+                        <strong><%= item.problemCode ? `#${item.problemCode} ` : '' %><%= item.problemTitle %></strong>
+                        <span class="pill pill-muted" style="display: inline-block; margin-top: 6px;"><%= item.problemDomain %></span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="table-url-cell">
+                        <a href="<%= item.githubUrl %>" target="_blank" rel="noopener noreferrer" class="url-link-btn url-link-github">
+                          💻 GitHub Repo
+                        </a>
+                        <a href="<%= item.deployedUrl %>" target="_blank" rel="noopener noreferrer" class="url-link-btn url-link-deployed">
+                          🚀 Deployed Link
+                        </a>
+                        <a href="<%= item.linkedinUrl %>" target="_blank" rel="noopener noreferrer" class="url-link-btn url-link-linkedin">
+                          🔗 LinkedIn Post
+                        </a>
+                      </div>
+                    </td>
+                    <td style="font-size: 0.9rem; color: var(--muted);">
+                      <%= item.createdAtFormatted %>
+                    </td>
+                    <td>
+                      <form method="post" action="/admin/submissions/<%= item.id %>/delete" style="display: inline-block;">
+                        <button
+                          type="submit"
+                          class="danger-button table-delete-button"
+                          onclick="return confirm('Are you sure you want to delete this project submission?')"
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+
+          <p id="submission-empty-state" class="muted-copy selection-empty" style="text-align: center; padding: 20px;" hidden>
+            No project submissions match the current search or filter.
+          </p>
+        <% } %>
+      </section>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById("submission-search");
+        const domainFilter = document.getElementById("submission-domain-filter");
+        const rows = Array.from(document.querySelectorAll("[data-submission-row]"));
+        const emptyState = document.getElementById("submission-empty-state");
+
+        function filterSubmissions() {
+          const query = (searchInput?.value || "").trim().toLowerCase();
+          const selectedDomain = (domainFilter?.value || "all").toLowerCase();
+          let visibleCount = 0;
+
+          rows.forEach((row) => {
+            const matchesSearch = !query || row.dataset.submissionSearch.includes(query);
+            const matchesDomain = selectedDomain === "all" || row.dataset.submissionDomain === selectedDomain;
+            
+            const isVisible = matchesSearch && matchesDomain;
+            row.hidden = !isVisible;
+            if (isVisible) {
+              visibleCount++;
+            }
+          });
+
+          if (emptyState) {
+            emptyState.hidden = (visibleCount !== 0);
+          }
+        }
+
+        searchInput?.addEventListener("input", filterSubmissions);
+        domainFilter?.addEventListener("change", filterSubmissions);
+      });
+    </script>
+  </body>
+</html>

@@ -1466,7 +1466,7 @@ app.get("/api/fetch-selection", async (req, res) => {
   }
 });
 
-app.get("/summership-submission1", async (req, res, next) => {
+app.get("/summership", async (req, res, next) => {
   try {
     let existingSubmission = null;
     let leaderName = "";
@@ -1511,7 +1511,7 @@ app.get("/summership-submission1", async (req, res, next) => {
   }
 });
 
-app.post("/summership-submission1", async (req, res, next) => {
+app.post("/summership", async (req, res, next) => {
   const mobileNumber = String(req.body.mobileNumber || "").trim();
   const problemId = String(req.body.problemId || "").trim();
   const githubUrl = String(req.body.githubUrl || "").trim();
@@ -1520,12 +1520,12 @@ app.post("/summership-submission1", async (req, res, next) => {
 
   if (!mobileNumber || !problemId || !githubUrl || !deployedUrl || !linkedinUrl) {
     setFlash(req, "error", "Please fill in all form fields completely.");
-    return res.redirect("/summership-submission1");
+    return res.redirect("/summership");
   }
 
   if (!validMobileNumber(mobileNumber)) {
     setFlash(req, "error", "Please enter a valid 10-digit mobile number.");
-    return res.redirect("/summership-submission1");
+    return res.redirect("/summership");
   }
 
   const isValidUrl = (str) => {
@@ -1539,7 +1539,7 @@ app.post("/summership-submission1", async (req, res, next) => {
 
   if (!isValidUrl(githubUrl) || !isValidUrl(deployedUrl) || !isValidUrl(linkedinUrl)) {
     setFlash(req, "error", "Please enter valid URLs starting with http:// or https:// for all link fields.");
-    return res.redirect("/summership-submission1");
+    return res.redirect("/summership");
   }
 
   try {
@@ -1554,7 +1554,7 @@ app.post("/summership-submission1", async (req, res, next) => {
         "error", 
         "We could not verify a locked problem statement selection for this phone number and problem ID. Make sure you select a problem statement in the portal first."
       );
-      return res.redirect("/summership-submission1");
+      return res.redirect("/summership");
     }
 
     await pool.query(
@@ -1569,7 +1569,48 @@ app.post("/summership-submission1", async (req, res, next) => {
     );
 
     setFlash(req, "success", "Your Summership project submission has been saved successfully! You can update it anytime before the deadline.");
-    return res.redirect("/summership-submission1");
+    return res.redirect("/summership");
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/summership-admin", requireAdmin, async (req, res, next) => {
+  try {
+    const [submissions] = await pool.query(
+      `SELECT 
+        s.id,
+        s.mobile_number AS mobileNumber,
+        s.github_url AS githubUrl,
+        s.deployed_url AS deployedUrl,
+        s.linkedin_url AS linkedinUrl,
+        s.created_at AS createdAt,
+        DATE_FORMAT(s.created_at, '%b %d, %Y %h:%i %p') AS createdAtFormatted,
+        COALESCE(ps.team_name, 'Unknown Participant') AS teamName,
+        COALESCE(ps.team_leader_name, 'No Email') AS emailAddress,
+        COALESCE(p.title, 'Deleted/Unknown Problem') AS problemTitle,
+        p.problem_code AS problemCode,
+        COALESCE(p.domain, 'Unknown') AS problemDomain
+      FROM submissions s
+      LEFT JOIN problem_selections ps ON ps.mobile_number = s.mobile_number
+      LEFT JOIN problems p ON p.id = s.problem_id
+      ORDER BY s.created_at DESC`
+    );
+
+    res.render("admin-submissions", {
+      title: "Project Submissions Admin | Summership 2026",
+      submissions,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/admin/submissions/:id/delete", requireAdmin, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM submissions WHERE id = ?", [req.params.id]);
+    setFlash(req, "success", "Project submission has been deleted successfully.");
+    res.redirect("/summership-admin");
   } catch (error) {
     next(error);
   }

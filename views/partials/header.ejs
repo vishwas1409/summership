@@ -11,7 +11,9 @@
 
   <% if (admin) { %>
     <nav class="site-nav">
-      <form method="post" action="/admin/logout">
+      <a href="/admin" class="nav-button" style="text-decoration: none;">Selections Dashboard</a>
+      <a href="/summership-admin" class="nav-button" style="text-decoration: none;">Submissions Board</a>
+      <form method="post" action="/admin/logout" style="margin: 0; display: inline-block;">
         <button type="submit" class="nav-button">Logout</button>
       </form>
     </nav>

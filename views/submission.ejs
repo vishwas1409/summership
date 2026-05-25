@@ -322,14 +322,14 @@
           </div>
 
           <div style="margin-top: 16px;">
-            <p style="color: var(--muted); font-size: 0.96rem; margin-bottom: 18px;">Your deliverables are securely registered. Customize the font and name layout below, then download your high-resolution certificate.</p>
+            <p style="color: var(--muted); font-size: 0.96rem; margin-bottom: 18px;">Your deliverables are securely registered. Download your official high-resolution certificate below.</p>
             
-            <div class="cert-controls" style="margin-bottom: 18px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <div class="cert-controls" style="display: none;">
               <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--muted);">
                 Name Display:
                 <select id="cert-name-type" style="width: auto; min-width: 180px;">
-                  <option value="leader">Participant Full Name</option>
-                  <option value="team">Team Name</option>
+                  <option value="team" selected>Participant Full Name</option>
+                  <option value="leader">Email Address</option>
                 </select>
               </label>
 
@@ -338,7 +338,7 @@
                 <select id="cert-font-style" style="width: auto; min-width: 180px;">
                   <option value="Great Vibes">Classic Calligraphy (Script)</option>
                   <option value="Playfair Display">Elegant Modern (Serif)</option>
-                  <option value="Montserrat">Bold Corporate (Sans-Serif)</option>
+                  <option value="Montserrat" selected>Bold Corporate (Sans-Serif)</option>
                   <option value="Fira Sans">Clean Default (Sans-Serif)</option>
                 </select>
               </label>

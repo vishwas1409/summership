@@ -277,8 +277,20 @@
               />
             </label>
 
+            <label>
+              Loom 60-Sec Video URL
+              <input 
+                type="url" 
+                name="loomUrl" 
+                id="loom-url-input"
+                placeholder="https://www.loom.com/share/..." 
+                value="<%= typeof existingSubmission !== 'undefined' && existingSubmission ? existingSubmission.loomUrl : '' %>"
+                required 
+              />
+            </label>
+ 
             <button type="submit" id="submit-btn" class="primary-button" style="margin-top: 10px;" disabled>
-              <%= existingSubmission ? "Update Deliverables" : "Submit Deliverables" %>
+              <%= existingSubmission ? "Update & get E-Certificate" : "Submit & get E-Certificate" %>
             </button>
           </form>
         </section>
@@ -376,6 +388,7 @@
               <li><strong>GitHub Repository:</strong> Is your repository set to <strong>Public</strong> with all the latest code pushed?</li>
               <li><strong>Live App URL:</strong> Is your deployed link active and fully functional?</li>
               <li><strong>LinkedIn Social Post:</strong> Have you detailed your learning journey and <strong>tagged @GradSkills</strong>? <em>(Failure to tag GradSkills or using private posts may prevent our selection bots from indexing your submission, leading to automatic Round 2 disqualification!)</em></li>
+              <li><strong>Loom 60-Sec Video:</strong> Have you recorded a clean Loom video walkthrough explaining your project and workflow?</li>
             </ul>
           </div>
           
@@ -495,12 +508,14 @@
                 document.getElementById("github-url-input").value = data.submission.githubUrl || "";
                 document.getElementById("deployed-url-input").value = data.submission.deployedUrl || "";
                 document.getElementById("linkedin-url-input").value = data.submission.linkedinUrl || "";
-                submitBtn.textContent = "Update Deliverables";
+                document.getElementById("loom-url-input").value = data.submission.loomUrl || "";
+                submitBtn.textContent = "Update & get E-Certificate";
               } else {
                 document.getElementById("github-url-input").value = "";
                 document.getElementById("deployed-url-input").value = "";
                 document.getElementById("linkedin-url-input").value = "";
-                submitBtn.textContent = "Submit Deliverables";
+                document.getElementById("loom-url-input").value = "";
+                submitBtn.textContent = "Submit & get E-Certificate";
               }
 
               // Display details
@@ -527,12 +542,13 @@
         function resetInfoCard(message) {
           hiddenProblemId.value = "";
           submitBtn.disabled = true;
-          submitBtn.textContent = "Submit Deliverables";
+          submitBtn.textContent = "Submit & get E-Certificate";
           infoCard.classList.remove("active");
 
           document.getElementById("github-url-input").value = "";
           document.getElementById("deployed-url-input").value = "";
           document.getElementById("linkedin-url-input").value = "";
+          document.getElementById("loom-url-input").value = "";
           
           placeholderMsg.style.display = "block";
           psInfoContainer.style.display = "none";

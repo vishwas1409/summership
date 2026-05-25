@@ -132,7 +132,7 @@
                   <tr
                     data-submission-row
                     data-submission-domain="<%= item.problemDomain.toLowerCase() %>"
-                    data-submission-search="<%= `${item.teamName} ${item.emailAddress} ${item.mobileNumber} ${item.problemTitle} ${item.problemDomain} ${item.githubUrl} ${item.deployedUrl} ${item.linkedinUrl}`.toLowerCase() %>"
+                    data-submission-search="<%= `${item.teamName} ${item.emailAddress} ${item.mobileNumber} ${item.problemTitle} ${item.problemDomain} ${item.githubUrl} ${item.deployedUrl} ${item.linkedinUrl} ${item.loomUrl}`.toLowerCase() %>"
                   >
                     <td>
                       <strong><%= item.teamName %></strong>
@@ -160,6 +160,11 @@
                         <a href="<%= item.linkedinUrl %>" target="_blank" rel="noopener noreferrer" class="url-link-btn url-link-linkedin">
                           🔗 LinkedIn Post
                         </a>
+                        <% if (item.loomUrl) { %>
+                          <a href="<%= item.loomUrl %>" target="_blank" rel="noopener noreferrer" class="url-link-btn url-link-linkedin" style="background: rgba(98, 93, 245, 0.1); border: 1px solid rgba(98, 93, 245, 0.2); color: #a5b4fc;">
+                            📹 Loom Video
+                          </a>
+                        <% } %>
                       </div>
                     </td>
                     <td style="font-size: 0.9rem; color: var(--muted);">

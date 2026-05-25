@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS submissions (
   github_url VARCHAR(255) NOT NULL,
   deployed_url VARCHAR(255) NOT NULL,
   linkedin_url VARCHAR(255) NOT NULL,
+  loom_url VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_submissions_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

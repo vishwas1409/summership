@@ -469,10 +469,17 @@ async function ensureSubmissionsTable() {
         github_url VARCHAR(255) NOT NULL,
         deployed_url VARCHAR(255) NOT NULL,
         linkedin_url VARCHAR(255) NOT NULL,
+        loom_url VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_submissions_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    const [columns] = await pool.query("SHOW COLUMNS FROM submissions LIKE 'loom_url'");
+    if (columns.length === 0) {
+      await pool.query("ALTER TABLE submissions ADD COLUMN loom_url VARCHAR(255) NULL AFTER linkedin_url");
+      console.log("Migration: Added loom_url column to submissions table.");
+    }
   } catch (error) {
     console.error("Error ensuring submissions table:", error);
     throw error;
@@ -1440,7 +1447,7 @@ app.get("/api/fetch-selection", async (req, res) => {
     const smallDescription = (selection.solutionIdea || selection.description || "").trim().slice(0, 300) + "...";
 
     const [subRows] = await pool.query(
-      `SELECT github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl 
+      `SELECT github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl, loom_url AS loomUrl 
        FROM submissions 
        WHERE mobile_number = ? 
        LIMIT 1`,
@@ -1483,7 +1490,7 @@ app.get("/submission", async (req, res, next) => {
 
     if (participant && participant.mobileNumber) {
       const [subRows] = await pool.query(
-        `SELECT problem_id AS problemId, github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl 
+        `SELECT problem_id AS problemId, github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl, loom_url AS loomUrl 
          FROM submissions 
          WHERE mobile_number = ? 
          LIMIT 1`,
@@ -1525,8 +1532,9 @@ app.post("/submission", async (req, res, next) => {
   const githubUrl = String(req.body.githubUrl || "").trim();
   const deployedUrl = String(req.body.deployedUrl || "").trim();
   const linkedinUrl = String(req.body.linkedinUrl || "").trim();
+  const loomUrl = String(req.body.loomUrl || "").trim();
 
-  if (!mobileNumber || !problemId || !githubUrl || !deployedUrl || !linkedinUrl) {
+  if (!mobileNumber || !problemId || !githubUrl || !deployedUrl || !linkedinUrl || !loomUrl) {
     setFlash(req, "error", "Please fill in all form fields completely.");
     return res.redirect("/submission");
   }
@@ -1545,7 +1553,7 @@ app.post("/submission", async (req, res, next) => {
     }
   };
 
-  if (!isValidUrl(githubUrl) || !isValidUrl(deployedUrl) || !isValidUrl(linkedinUrl)) {
+  if (!isValidUrl(githubUrl) || !isValidUrl(deployedUrl) || !isValidUrl(linkedinUrl) || !isValidUrl(loomUrl)) {
     setFlash(req, "error", "Please enter valid URLs starting with http:// or https:// for all link fields.");
     return res.redirect("/submission");
   }
@@ -1566,14 +1574,15 @@ app.post("/submission", async (req, res, next) => {
     }
 
     await pool.query(
-      `INSERT INTO submissions (mobile_number, problem_id, github_url, deployed_url, linkedin_url)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO submissions (mobile_number, problem_id, github_url, deployed_url, linkedin_url, loom_url)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          problem_id = VALUES(problem_id),
          github_url = VALUES(github_url),
          deployed_url = VALUES(deployed_url),
-         linkedin_url = VALUES(linkedin_url)`,
-      [mobileNumber, problemId, githubUrl, deployedUrl, linkedinUrl]
+         linkedin_url = VALUES(linkedin_url),
+         loom_url = VALUES(loom_url)`,
+      [mobileNumber, problemId, githubUrl, deployedUrl, linkedinUrl, loomUrl]
     );
 
     setFlash(req, "success", "Your Summership project submission has been saved successfully! You can update it anytime before the deadline.");
@@ -1592,6 +1601,7 @@ app.get("/submission-admin", requireAdmin, async (req, res, next) => {
         s.github_url AS githubUrl,
         s.deployed_url AS deployedUrl,
         s.linkedin_url AS linkedinUrl,
+        s.loom_url AS loomUrl,
         s.created_at AS createdAt,
         DATE_FORMAT(s.created_at, '%b %d, %Y %h:%i %p') AS createdAtFormatted,
         COALESCE(ps.team_name, 'Unknown Participant') AS teamName,

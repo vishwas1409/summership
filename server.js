@@ -1466,11 +1466,15 @@ app.get("/api/fetch-selection", async (req, res) => {
   }
 });
 
-app.get("/submission", (req, res) => {
-  return res.redirect("/summership");
+app.get("/summership", (req, res) => {
+  return res.redirect("/submission");
 });
 
-app.get("/summership", async (req, res, next) => {
+app.get("/summership-admin", requireAdmin, (req, res) => {
+  return res.redirect("/submission-admin");
+});
+
+app.get("/submission", async (req, res, next) => {
   try {
     let existingSubmission = null;
     let leaderName = "";
@@ -1515,7 +1519,7 @@ app.get("/summership", async (req, res, next) => {
   }
 });
 
-app.post("/summership", async (req, res, next) => {
+app.post("/submission", async (req, res, next) => {
   const mobileNumber = String(req.body.mobileNumber || "").trim();
   const problemId = String(req.body.problemId || "").trim();
   const githubUrl = String(req.body.githubUrl || "").trim();
@@ -1524,12 +1528,12 @@ app.post("/summership", async (req, res, next) => {
 
   if (!mobileNumber || !problemId || !githubUrl || !deployedUrl || !linkedinUrl) {
     setFlash(req, "error", "Please fill in all form fields completely.");
-    return res.redirect("/summership");
+    return res.redirect("/submission");
   }
 
   if (!validMobileNumber(mobileNumber)) {
     setFlash(req, "error", "Please enter a valid 10-digit mobile number.");
-    return res.redirect("/summership");
+    return res.redirect("/submission");
   }
 
   const isValidUrl = (str) => {
@@ -1543,7 +1547,7 @@ app.post("/summership", async (req, res, next) => {
 
   if (!isValidUrl(githubUrl) || !isValidUrl(deployedUrl) || !isValidUrl(linkedinUrl)) {
     setFlash(req, "error", "Please enter valid URLs starting with http:// or https:// for all link fields.");
-    return res.redirect("/summership");
+    return res.redirect("/submission");
   }
 
   try {
@@ -1558,7 +1562,7 @@ app.post("/summership", async (req, res, next) => {
         "error", 
         "We could not verify a locked problem statement selection for this phone number and problem ID. Make sure you select a problem statement in the portal first."
       );
-      return res.redirect("/summership");
+      return res.redirect("/submission");
     }
 
     await pool.query(
@@ -1573,13 +1577,13 @@ app.post("/summership", async (req, res, next) => {
     );
 
     setFlash(req, "success", "Your Summership project submission has been saved successfully! You can update it anytime before the deadline.");
-    return res.redirect("/summership");
+    return res.redirect("/submission");
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/summership-admin", requireAdmin, async (req, res, next) => {
+app.get("/submission-admin", requireAdmin, async (req, res, next) => {
   try {
     const [submissions] = await pool.query(
       `SELECT 
@@ -1614,7 +1618,7 @@ app.post("/admin/submissions/:id/delete", requireAdmin, async (req, res, next) =
   try {
     await pool.query("DELETE FROM submissions WHERE id = ?", [req.params.id]);
     setFlash(req, "success", "Project submission has been deleted successfully.");
-    res.redirect("/summership-admin");
+    res.redirect("/submission-admin");
   } catch (error) {
     next(error);
   }

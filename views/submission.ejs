@@ -219,7 +219,7 @@
         <section class="controls-card" style="margin-top: 0;">
           <div class="controls-head">
             <div>
-              <p class="eyebrow">Deliverables Form</p>
+              <p class="eyebrow">Submission Form</p>
               <h2>Enter Submission Links</h2>
             </div>
           </div>
@@ -290,7 +290,7 @@
             </label>
  
             <button type="submit" id="submit-btn" class="primary-button" style="margin-top: 10px;" disabled>
-              <%= existingSubmission ? "Update & get E-Certificate" : "Submit & get E-Certificate" %>
+              <%= existingSubmission ? "Upload & get E-Certificate" : "Submit & get E-Certificate" %>
             </button>
           </form>
         </section>
@@ -509,7 +509,7 @@
                 document.getElementById("deployed-url-input").value = data.submission.deployedUrl || "";
                 document.getElementById("linkedin-url-input").value = data.submission.linkedinUrl || "";
                 document.getElementById("loom-url-input").value = data.submission.loomUrl || "";
-                submitBtn.textContent = "Update & get E-Certificate";
+                submitBtn.textContent = "Upload & get E-Certificate";
               } else {
                 document.getElementById("github-url-input").value = "";
                 document.getElementById("deployed-url-input").value = "";

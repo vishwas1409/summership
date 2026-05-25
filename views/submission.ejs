@@ -315,6 +315,33 @@
         </aside>
       </div>
 
+      <% if (sponsorLogos && sponsorLogos.length > 0) { %>
+        <section class="sponsors-card" style="margin-top: 32px;">
+          <div class="controls-head">
+            <div>
+              <p class="eyebrow">Our Partners</p>
+              <h2>Backing Summership 2026</h2>
+            </div>
+            <p class="controls-copy">Our valued partners making this event possible.</p>
+          </div>
+          <div class="sponsor-marquee">
+            <div class="sponsor-track">
+              <% sponsorLogos.forEach((sponsor, index) => { %>
+                <article class="sponsor-item sponsor-item-<%= (index % 3) + 1 %>">
+                  <div class="sponsor-logo-shell">
+                    <img src="<%= sponsor.src %>?v=<%= assetVersion %>" alt="<%= sponsor.alt %>" loading="lazy" />
+                  </div>
+                  <div class="sponsor-label">
+                    <strong><%= sponsor.name %></strong>
+                    <span class="sponsor-role"><%= sponsor.role %></span>
+                  </div>
+                </article>
+              <% }) %>
+            </div>
+          </div>
+        </section>
+      <% } %>
+
       <!-- Live Certificate Claim Section -->
       <div id="cert-locked-placeholder" class="cert-locked-placeholder" style="margin-top: 32px;">
         <strong>Certificate of Participation</strong>

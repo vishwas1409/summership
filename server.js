@@ -1523,6 +1523,7 @@ app.get("/submission", async (req, res, next) => {
       existingSubmission,
       leaderName,
       teamName,
+      sponsorLogos: SPONSOR_LOGOS,
     });
   } catch (error) {
     next(error);

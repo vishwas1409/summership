@@ -19,6 +19,7 @@
 
       html, body {
         height: 100%;
+        width: 100%;
       }
 
       body {
@@ -118,13 +119,14 @@
         position: relative;
         z-index: 10;
         width: 100%;
-        max-width: 480px;
+        max-width: 520px;
         background: rgba(8, 12, 30, 0.75);
         border: 1px solid rgba(139, 92, 246, 0.18);
         border-radius: 28px;
-        padding: 48px 40px;
+        padding: 52px 48px;
         backdrop-filter: blur(32px);
         -webkit-backdrop-filter: blur(32px);
+        overflow: hidden;
         box-shadow:
           0 0 0 1px rgba(255, 255, 255, 0.04) inset,
           0 32px 80px -20px rgba(0, 0, 0, 0.7),
@@ -193,16 +195,18 @@
 
       /* Title */
       .cert-title {
-        font-size: 2.25rem;
+        font-size: 2.4rem;
         font-weight: 800;
-        line-height: 1.15;
+        line-height: 1.12;
         letter-spacing: -0.04em;
         background: linear-gradient(160deg, #ffffff 30%, #c084fc 70%, #8b5cf6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         margin-bottom: 12px;
-        white-space: nowrap;
+        white-space: normal;
+        word-break: keep-all;
+        overflow-wrap: normal;
       }
 
       /* Subtitle */
@@ -457,9 +461,15 @@
       .reset-link:hover { color: #a855f7; }
 
       /* ─── RESPONSIVE ────────────────────────────────────────── */
-      @media (max-width: 540px) {
+      @media (max-width: 600px) {
         .cert-card { padding: 36px 24px; }
-        .cert-title { font-size: 1.85rem; white-space: normal; }
+        .cert-title { font-size: 1.85rem; }
+      }
+
+      /* Desktop-specific: ensure body takes full viewport height */
+      @media (min-width: 601px) {
+        body { min-height: 100vh; }
+        .cert-page { min-height: calc(100vh - 64px); }
       }
     </style>
   </head>

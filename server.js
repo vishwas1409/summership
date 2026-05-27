@@ -1378,6 +1378,11 @@ app.post("/admin/selections/:id/update", requireAdmin, async (req, res, next) =>
   }
 });
 
+/* ── Helper: validate 10-digit Indian mobile number ── */
+function validMobileNumber(n) {
+  return /^[6-9]\d{9}$/.test(String(n).trim());
+}
+
 app.get("/api/fetch-selection", async (req, res) => {
   const mobileNumber = String(req.query.mobileNumber || "").trim();
 

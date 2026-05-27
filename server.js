@@ -935,98 +935,9 @@ app.post("/participant/logout", requireParticipant, (req, res, next) => {
   });
 });
 
-app.post("/select", requireParticipant, async (req, res, next) => {
-  const problemId = String(req.body.problemId || "").trim();
-  const participantId = req.session.participant.id;
-
-  if (!problemId) {
-    setFlash(req, "error", "Please choose a problem statement first.");
-    return res.redirect("/");
-  }
-
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-
-    const [participantRows] = await connection.query(
-      `SELECT
-        id,
-        team_name AS teamName,
-        COALESCE(NULLIF(email_address, ''), team_leader_name) AS emailAddress,
-        mobile_number AS mobileNumber
-      FROM participants
-      WHERE id = ?
-      FOR UPDATE`,
-      [participantId]
-    );
-
-    if (participantRows.length === 0) {
-      throw new Error("Your participant account could not be found. Please sign in again.");
-    }
-
-    const participant = participantRows[0];
-    const [existingSelections] = await connection.query(
-      "SELECT id FROM problem_selections WHERE participant_id = ? FOR UPDATE",
-      [participantId]
-    );
-
-    if (existingSelections.length > 0) {
-      throw new Error("You have already selected a problem statement. Editing is disabled after confirmation.");
-    }
-
-    const [problemRows] = await connection.query(
-      "SELECT id, title, is_active AS isActive FROM problems WHERE id = ? FOR UPDATE",
-      [problemId]
-    );
-
-    if (problemRows.length === 0 || Number(problemRows[0].isActive) !== 1) {
-      throw new Error("This problem statement is no longer available.");
-    }
-
-    const [countRows] = await connection.query(
-      "SELECT COUNT(*) AS total FROM problem_selections WHERE problem_id = ?",
-      [problemId]
-    );
-
-    const currentSelections = Number(countRows[0].total || 0);
-    if (currentSelections >= TEAM_LIMIT) {
-      throw new Error("This problem statement is already full. Please choose another one.");
-    }
-
-    await connection.query(
-      `INSERT INTO problem_selections
-        (participant_id, problem_id, team_name, team_leader_name, email_address, mobile_number)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        participant.id,
-        problemId,
-        participant.teamName.trim(),
-        participant.emailAddress.trim(),
-        participant.emailAddress.trim(),
-        participant.mobileNumber.trim(),
-      ]
-    );
-
-    await connection.commit();
-    setFlash(
-      req,
-      "success",
-      `Problem statement locked for team "${participant.teamName}". It can no longer be edited.`
-    );
-    return res.redirect("/");
-  } catch (error) {
-    await connection.rollback();
-
-    if (error.code === "ER_DUP_ENTRY") {
-      setFlash(req, "error", "This participant account already has a saved selection.");
-      return res.redirect("/");
-    }
-
-    setFlash(req, "error", error.message || "We could not save that team selection.");
-    return res.redirect("/");
-  } finally {
-    connection.release();
-  }
+app.post("/select", requireParticipant, (req, res) => {
+  setFlash(req, "error", "Problem statement selection has closed. For any queries, please contact Vishwas Kakkkireni at +91 9059471268.");
+  return res.redirect("/");
 });
 
 app.get("/admin/login", (req, res) => {
@@ -1176,6 +1087,60 @@ app.get("/admin/selections/export.xlsx", requireAdmin, async (req, res, next) =>
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
     res.setHeader("Content-Disposition", 'attachment; filename="team-selections.xlsx"');
+    res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/admin/submissions/export.xlsx", requireAdmin, async (req, res, next) => {
+  try {
+    const [submissions] = await pool.query(
+      `SELECT 
+        s.id,
+        s.mobile_number AS mobileNumber,
+        s.github_url AS githubUrl,
+        s.deployed_url AS deployedUrl,
+        s.linkedin_url AS linkedinUrl,
+        s.loom_url AS loomUrl,
+        s.created_at AS createdAt,
+        DATE_FORMAT(s.created_at, '%b %d, %Y %h:%i %p') AS createdAtFormatted,
+        COALESCE(ps.team_name, 'Unknown Participant') AS teamName,
+        COALESCE(ps.team_leader_name, 'No Email') AS emailAddress,
+        COALESCE(p.title, 'Deleted/Unknown Problem') AS problemTitle,
+        p.problem_code AS problemCode,
+        COALESCE(p.domain, 'Unknown') AS problemDomain
+      FROM submissions s
+      LEFT JOIN problem_selections ps ON ps.mobile_number = s.mobile_number
+      LEFT JOIN problems p ON p.id = s.problem_id
+      ORDER BY s.created_at DESC`
+    );
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(
+      submissions.map((item) => ({
+        "Team Name": item.teamName,
+        "Email Address": item.emailAddress,
+        "Mobile Number": item.mobileNumber,
+        "Problem Code": item.problemCode || "N/A",
+        "Problem Statement": item.problemTitle,
+        Domain: item.problemDomain,
+        "GitHub URL": item.githubUrl,
+        "Deployed URL": item.deployedUrl,
+        "LinkedIn URL": item.linkedinUrl,
+        "Loom Video URL": item.loomUrl || "",
+        "Submitted At": item.createdAtFormatted,
+      }))
+    );
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Submissions");
+    const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", 'attachment; filename="project-submissions.xlsx"');
     res.send(buffer);
   } catch (error) {
     next(error);
@@ -1531,70 +1496,9 @@ app.get("/submission", async (req, res, next) => {
   }
 });
 
-app.post("/submission", async (req, res, next) => {
-  const mobileNumber = String(req.body.mobileNumber || "").trim();
-  const problemId = String(req.body.problemId || "").trim();
-  const githubUrl = String(req.body.githubUrl || "").trim();
-  const deployedUrl = String(req.body.deployedUrl || "").trim();
-  const linkedinUrl = String(req.body.linkedinUrl || "").trim();
-  const loomUrl = String(req.body.loomUrl || "").trim();
-
-  if (!mobileNumber || !problemId || !githubUrl || !deployedUrl || !linkedinUrl || !loomUrl) {
-    setFlash(req, "error", "Please fill in all form fields completely.");
-    return res.redirect("/submission");
-  }
-
-  if (!validMobileNumber(mobileNumber)) {
-    setFlash(req, "error", "Please enter a valid 10-digit mobile number.");
-    return res.redirect("/submission");
-  }
-
-  const isValidUrl = (str) => {
-    try {
-      const u = new URL(str);
-      return u.protocol === "http:" || u.protocol === "https:";
-    } catch (_) {
-      return false;
-    }
-  };
-
-  if (!isValidUrl(githubUrl) || !isValidUrl(deployedUrl) || !isValidUrl(linkedinUrl) || !isValidUrl(loomUrl)) {
-    setFlash(req, "error", "Please enter valid URLs starting with http:// or https:// for all link fields.");
-    return res.redirect("/submission");
-  }
-
-  try {
-    const [selections] = await pool.query(
-      `SELECT id FROM problem_selections WHERE mobile_number = ? AND problem_id = ? LIMIT 1`,
-      [mobileNumber, problemId]
-    );
-
-    if (selections.length === 0) {
-      setFlash(
-        req, 
-        "error", 
-        "We could not verify a locked problem statement selection for this phone number and problem ID. Make sure you select a problem statement in the portal first."
-      );
-      return res.redirect("/submission");
-    }
-
-    await pool.query(
-      `INSERT INTO submissions (mobile_number, problem_id, github_url, deployed_url, linkedin_url, loom_url)
-       VALUES (?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-         problem_id = VALUES(problem_id),
-         github_url = VALUES(github_url),
-         deployed_url = VALUES(deployed_url),
-         linkedin_url = VALUES(linkedin_url),
-         loom_url = VALUES(loom_url)`,
-      [mobileNumber, problemId, githubUrl, deployedUrl, linkedinUrl, loomUrl]
-    );
-
-    setFlash(req, "success", "Your Summership project submission has been saved successfully! You can update it anytime before the deadline.");
-    return res.redirect("/submission");
-  } catch (error) {
-    next(error);
-  }
+app.post("/submission", (req, res) => {
+  setFlash(req, "error", "Project submissions have closed. For any queries, please contact Vishwas Kakkkireni at +91 9059471268.");
+  return res.redirect("/submission");
 });
 
 app.get("/submission-admin", requireAdmin, async (req, res, next) => {

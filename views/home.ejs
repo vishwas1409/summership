@@ -12,6 +12,24 @@
       <%- include("partials/header") %>
       <%- include("partials/flash") %>
 
+      <!-- Premium Warning Banner indicating Problem Selection has ended -->
+      <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(245, 158, 11, 0.08) 100%); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-lg); padding: 18px 24px; margin: 24px 0 8px; display: flex; align-items: center; gap: 16px; justify-content: space-between; flex-wrap: wrap; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.5rem;">🔒</span>
+          <div>
+            <h4 style="color: #f59e0b; margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.02em;">Problem Statement Selection Closed</h4>
+            <p style="color: var(--muted); margin: 0; font-size: 0.88rem; line-height: 1.4;">The selection phase has officially ended. All locked selections and team accounts are safe and preserved.</p>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 0.88rem; border-left: 1px solid rgba(255, 255, 255, 0.08); padding-left: 16px;">
+          <span style="color: var(--muted); margin-bottom: 2px;">For queries, contact support:</span>
+          <strong style="color: #ffffff;">Vishwas Kakkkireni</strong>
+          <a href="tel:+919059471268" style="color: var(--brand-deep); font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+            📞 +91 9059471268
+          </a>
+        </div>
+      </div>
+
       <!-- poster modal removed -->
 
       <section class="hero hero-home">
@@ -299,15 +317,7 @@
                       </div>
                     </div>
 
-                    <% if (problem.isFull) { %>
-                      <button type="button" class="primary-button select-trigger" disabled>
-                        Slots Filled
-                      </button>
-                    <% } else if (!participant) { %>
-                      <button type="button" class="primary-button select-trigger" data-open-login>
-                        Login to Select
-                      </button>
-                    <% } else if (participantSelection && Number(participantSelection.problemId) === Number(problem.id)) { %>
+                    <% if (participantSelection && Number(participantSelection.problemId) === Number(problem.id)) { %>
                       <button type="button" class="primary-button select-trigger" disabled>
                         Selected by Your Team
                       </button>
@@ -316,18 +326,8 @@
                         Selection Locked
                       </button>
                     <% } else { %>
-                      <button
-                        type="button"
-                        class="primary-button select-trigger"
-                        <%= problem.isFull ? "disabled" : "" %>
-                        data-open-selection
-                        data-problem-id="<%= problem.id %>"
-                        data-problem-title="<%= problem.title %>"
-                        data-problem-domain="<%= problem.domain %>"
-                        data-problem-count="<%= problem.teamCount %>"
-                        data-problem-limit="<%= teamLimit %>"
-                      >
-                        <%= problem.isFull ? "Slots Filled" : "Select Problem" %>
+                      <button type="button" class="primary-button select-trigger" disabled>
+                        Selection Closed
                       </button>
                     <% } %>
 

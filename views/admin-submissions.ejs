@@ -74,11 +74,15 @@
             Review live deliverables submitted by team leaders, check code repositories, live links, and verified LinkedIn social posts.
           </p>
           
-          <div class="stat-grid" style="margin-top: 24px;">
-            <article class="stat-card stat-card-highlight">
+          <div class="stat-grid" style="margin-top: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <article class="stat-card stat-card-highlight" style="margin: 0; min-width: 200px;">
               <span>Total Submissions</span>
               <strong><%= submissions.length %></strong>
             </article>
+            
+            <a href="/admin/submissions/export.xlsx" class="primary-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; height: fit-content; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); transition: transform 0.2s ease;">
+              📥 Export Submissions to Excel
+            </a>
           </div>
         </div>
       </section>

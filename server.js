@@ -1384,23 +1384,23 @@ function validMobileNumber(n) {
 }
 
 app.get("/api/fetch-selection", async (req, res) => {
-  const mobileNumber = String(req.query.mobileNumber || "").trim();
-
-  if (!mobileNumber) {
-    return res.json({ success: false, message: "Phone number is required." });
-  }
-
-  if (!validMobileNumber(mobileNumber)) {
-    return res.json({ success: false, message: "Please enter a valid 10-digit mobile number." });
-  }
-
   try {
+    const mobileNumber = String(req.query.mobileNumber || "").trim();
+
+    if (!mobileNumber) {
+      return res.json({ success: false, message: "Phone number is required." });
+    }
+
+    if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+      return res.json({ success: false, message: "Please enter a valid 10-digit mobile number." });
+    }
+
     const [rows] = await pool.query(
-      `SELECT 
-        ps.problem_id AS problemId, 
+      `SELECT
+        ps.problem_id AS problemId,
         ps.team_leader_name AS leaderName,
         ps.team_name AS teamName,
-        p.title AS title, 
+        p.title AS title,
         p.solution_idea AS solutionIdea,
         p.description AS description
       FROM problem_selections ps
@@ -1411,39 +1411,26 @@ app.get("/api/fetch-selection", async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.json({ 
-        success: false, 
-        message: "No locked problem selection found for this phone number. Please confirm your selection in the main portal first." 
+      return res.json({
+        success: false,
+        message: "No locked problem statement found for this number. Please make sure you have selected and locked a problem statement in the main portal."
       });
     }
 
     const selection = rows[0];
-    const smallDescription = (selection.solutionIdea || selection.description || "").trim().slice(0, 300) + "...";
-
-    const [subRows] = await pool.query(
-      `SELECT github_url AS githubUrl, deployed_url AS deployedUrl, linkedin_url AS linkedinUrl, loom_url AS loomUrl 
-       FROM submissions 
-       WHERE mobile_number = ? 
-       LIMIT 1`,
-      [mobileNumber]
-    );
-
-    const submissionExists = subRows.length > 0;
-    const submissionData = submissionExists ? subRows[0] : null;
 
     return res.json({
       success: true,
       problemId: selection.problemId,
-      title: selection.title,
-      description: smallDescription,
+      title: selection.title || "",
+      description: (selection.solutionIdea || selection.description || "").trim().slice(0, 300),
       leaderName: selection.leaderName || "",
       teamName: selection.teamName || "",
-      hasSubmitted: submissionExists,
-      submission: submissionData
     });
+
   } catch (error) {
-    console.error("Error in /api/fetch-selection:", error);
-    return res.status(500).json({ success: false, message: "Database lookup failed. Please try again." });
+    console.error("Error in /api/fetch-selection:", error.message || error);
+    return res.status(500).json({ success: false, message: "Database error: " + (error.message || "Unknown error. Please try again.") });
   }
 });
 

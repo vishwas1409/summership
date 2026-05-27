@@ -707,7 +707,21 @@
           errorPanel.style.display = 'none';
 
           try {
-            const res  = await fetch('/api/fetch-selection?mobileNumber=' + encodeURIComponent(mobile));
+            const res = await fetch('/api/fetch-selection?mobileNumber=' + encodeURIComponent(mobile));
+
+            /* Handle non-JSON responses (e.g. HTML error pages from server crash) */
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+              const text = await res.text();
+              console.error('Non-JSON response:', res.status, text.slice(0, 200));
+              submitBtn.classList.remove('loading');
+              btnLoader.style.display = 'none';
+              btnText.textContent = 'Generate Certificate';
+              submitBtn.disabled = false;
+              showError('Server error (' + res.status + '). Please try again or contact support.');
+              return;
+            }
+
             const data = await res.json();
 
             submitBtn.classList.remove('loading');
@@ -715,7 +729,7 @@
             btnText.textContent = 'Generate Certificate';
             submitBtn.disabled = false;
 
-            if (!data.success) { showError(data.message); return; }
+            if (!data.success) { showError(data.message || 'Verification failed. Please try again.'); return; }
 
             teamName     = data.teamName   || '';
             leaderName   = data.leaderName || '';
@@ -734,18 +748,19 @@
             /* Draw, show preview, then auto-download */
             await drawCert();
             const dataUrl = certCanvas.toDataURL('image/jpeg', 1.0);
-            previewImg.src = dataUrl;          /* show preview */
-            downloadJpg();                     /* auto-download */
+            previewImg.src = dataUrl;
+            downloadJpg();
 
             formView.style.display    = 'none';
             successView.style.display = 'flex';
 
-          } catch (_) {
+          } catch (err) {
+            console.error('Fetch error:', err);
             submitBtn.classList.remove('loading');
             btnLoader.style.display = 'none';
             btnText.textContent = 'Generate Certificate';
             submitBtn.disabled = false;
-            showError('Network error. Please check your connection and try again.');
+            showError('Could not reach server: ' + (err.message || 'Unknown error') + '. Please refresh and try again.');
           }
         });
 

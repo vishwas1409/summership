@@ -9,67 +9,158 @@
     <!-- jsPDF Library for client-side PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-      .claim-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
-        gap: 32px;
-        align-items: start;
-        margin-top: 32px;
-      }
-      
-      .certificate-card {
-        padding: 24px;
-        border-radius: var(--radius-xl);
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      body {
+        background: #030712;
+        color: #f3f4f6;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        transition: border-color 0.3s ease, background 0.3s ease;
+        justify-content: space-between;
       }
 
-      .certificate-card.active {
-        background: linear-gradient(135deg, rgba(140, 82, 255, 0.03) 0%, rgba(16, 185, 129, 0.03) 100%);
-        border-color: rgba(140, 82, 255, 0.2);
-      }
-
-      .claim-info-card {
-        padding: 24px;
-        border-radius: var(--radius-xl);
-        background: rgba(255, 255, 255, 0.01);
-        border: 1px dashed rgba(255, 255, 255, 0.08);
+      .claim-container {
         display: flex;
-        flex-direction: column;
-        gap: 16px;
-        justify-content: center;
         align-items: center;
-        min-height: 240px;
-        text-align: center;
-      }
-
-      .claim-placeholder-text {
-        color: var(--muted);
-        font-size: 1rem;
-        line-height: 1.6;
-        max-width: 320px;
-      }
-
-      .fetch-loader {
-        display: none;
         justify-content: center;
-        align-items: center;
-        gap: 10px;
-        color: var(--brand-deep);
-        font-weight: 700;
+        flex-grow: 1;
+        padding: 40px 24px;
+        position: relative;
       }
 
-      .fetch-loader::after {
+      /* Glow background behind the card */
+      .claim-container::before {
         content: "";
-        width: 24px;
-        height: 24px;
-        border: 3px solid rgba(140, 82, 255, 0.1);
-        border-top-color: var(--brand-deep);
+        position: absolute;
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, rgba(140, 82, 255, 0.08) 0%, rgba(16, 185, 129, 0.03) 70%, transparent 100%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .claim-card {
+        width: 100%;
+        max-width: 540px;
+        background: rgba(17, 24, 39, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+        padding: 48px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        z-index: 1;
+        position: relative;
+        text-align: center;
+        animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes cardFadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .claim-card-logo {
+        height: 56px;
+        width: auto;
+        margin-bottom: 24px;
+      }
+
+      .claim-card h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0 0 12px;
+        background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .claim-card p {
+        font-size: 0.98rem;
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 0 0 36px;
+      }
+
+      .big-input-wrapper {
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      .big-input {
+        width: 100%;
+        padding: 20px 24px;
+        font-size: 1.35rem;
+        font-weight: 700;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        color: #ffffff;
+        letter-spacing: 0.05em;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .big-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .big-input:focus {
+        border-color: #8c52ff;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 0 4px rgba(140, 82, 255, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        outline: none;
+      }
+
+      .generate-btn {
+        width: 100%;
+        padding: 18px 28px;
+        font-size: 1.15rem;
+        font-weight: 800;
+        border-radius: 18px;
+        border: none;
+        color: #ffffff;
+        background: linear-gradient(135deg, #8c52ff 0%, #6366f1 100%);
+        box-shadow: 0 10px 25px -5px rgba(140, 82, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(140, 82, 255, 0.6);
+        background: linear-gradient(135deg, #9a66ff 0%, #4f46e5 100%);
+      }
+
+      .generate-btn:active {
+        transform: translateY(0);
+      }
+
+      .generate-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Loader styles */
+      .inline-loader {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #ffffff;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
@@ -78,226 +169,225 @@
         to { transform: rotate(360deg); }
       }
 
-      .cert-preview-wrapper {
-        position: relative;
-        width: 100%;
-        margin: 0 auto;
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
-        background: #000000;
+      /* Error panel styling */
+      .error-alert {
         display: none;
-        animation: fadeIn 0.5s ease-out forwards;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #f87171;
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        line-height: 1.4;
+        margin-top: 16px;
+        text-align: left;
+        align-items: flex-start;
+        gap: 10px;
+        animation: slideDown 0.3s ease-out forwards;
       }
 
-      #cert-canvas {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(12px); }
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
       }
 
-      .action-row-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-top: 10px;
+      /* Success view container styling */
+      .success-view {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        animation: cardFadeIn 0.5s ease-out forwards;
       }
 
-      .action-row-buttons .primary-button {
+      .success-badge {
+        width: 80px;
+        height: 80px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid rgba(16, 185, 129, 0.25);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin-bottom: 24px;
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.15);
+      }
+
+      .success-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        margin-top: 24px;
+      }
+
+      .linkedin-post-btn {
+        width: 100%;
+        padding: 16px 24px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        border-radius: 16px;
+        border: none;
+        color: #ffffff;
+        background: linear-gradient(135deg, #0a66c2 0%, #0077b5 100%);
+        box-shadow: 0 10px 20px -5px rgba(10, 102, 194, 0.4);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.25s ease;
+      }
+
+      .linkedin-post-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px -5px rgba(10, 102, 194, 0.6);
+      }
+
+      .secondary-download-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 14px;
+        color: #f3f4f6;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.25s;
+        text-align: center;
         width: 100%;
       }
 
-      .linkedin-share-button {
-        background: linear-gradient(135deg, #0a66c2 0%, #0077b5 100%) !important;
-        border: none !important;
-        color: #ffffff !important;
-        box-shadow: 0 6px 20px rgba(10, 102, 194, 0.25) !important;
-        grid-column: span 2;
+      .secondary-download-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
       }
 
-      .linkedin-share-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(10, 102, 194, 0.35) !important;
+      .claim-another-link {
+        color: var(--brand-deep);
+        font-weight: 800;
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-top: 20px;
+        cursor: pointer;
+        transition: color 0.2s;
+        display: inline-block;
       }
 
-      @media (max-width: 980px) {
-        .claim-layout {
-          grid-template-columns: 1fr;
-        }
+      .claim-another-link:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <div class="app-shell">
-      <header class="site-header">
-        <a href="/claim-certificate" class="brand">
-          <span class="brand-badge brand-badge-logo">
-            <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills logo" class="brand-badge-image" />
-          </span>
-          <span>
-            <strong>GradSkills</strong>
-            <small>Summership E-Certificate Portal</small>
-          </span>
-        </a>
-        <div class="header-status" style="margin-left: auto;">
-          <span class="header-dot" style="background-color: #10b981;"></span>
-          <span style="color: #10b981; font-weight: 700;">GradSkills Certified</span>
-        </div>
-      </header>
+    <!-- Clean Minimal Branded Header without Certify badges -->
+    <header class="site-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(3, 7, 18, 0.9);">
+      <a href="/" class="brand" style="margin: 0 auto; padding-left: 0;">
+        <span class="brand-badge brand-badge-logo">
+          <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills logo" class="brand-badge-image" />
+        </span>
+        <span>
+          <strong>GradSkills</strong>
+          <small>Summership 2026</small>
+        </span>
+      </a>
+    </header>
 
-      <%- include("partials/flash") %>
+    <%- include("partials/flash") %>
 
-      <section class="hero hero-home" style="margin-bottom: 8px;">
-        <div class="hero-copy">
-          <div class="hero-logos-row" style="justify-content: center;">
-            <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills logo" class="hero-logo-mark" style="height: 64px; width: auto;" />
+    <!-- Card Container centered vertically -->
+    <div class="claim-container">
+      <div class="claim-card">
+        <!-- Input Form View -->
+        <div id="form-view">
+          <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills Logo" class="claim-card-logo" />
+          <h1>Summership E-Certificate</h1>
+          <p>Verify your locked problem statement and download your accrediting certificate.</p>
+          
+          <div class="big-input-wrapper">
+            <input 
+              type="tel" 
+              id="mobile-number-input" 
+              class="big-input" 
+              placeholder="Registered Phone Number" 
+              maxlength="10" 
+              autocomplete="off"
+            />
           </div>
-          <p class="eyebrow" style="color: var(--brand-deep); font-weight: 800; letter-spacing: 0.1em;">SUMMERSHIP CHALLENGE 2026</p>
-          <div class="hero-banner-pill" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">Official E-Certificate Portal</div>
-          <h1>Claim Your Official <span class="hero-highlight">Participation E-Certificate</span></h1>
-          <p class="hero-text" style="max-width: 65ch; margin: 16px auto 0;">
-            Congratulations on securing your team selection! Verify your registered mobile number below to instantly generate, customize, and download your accredited GradSkills participation certificate.
+
+          <button type="button" id="submit-btn" class="generate-btn" disabled>
+            <span class="inline-loader" id="btn-loader"></span>
+            <span id="btn-text">Generate Certificate</span>
+          </button>
+
+          <!-- Error Message Notice -->
+          <div class="error-alert" id="error-panel">
+            <span style="font-size: 1.2rem;">⚠️</span>
+            <span id="error-msg-text">No locked selection found for this number.</span>
+          </div>
+        </div>
+
+        <!-- Download & Success Share View -->
+        <div class="success-view" id="success-view">
+          <div class="success-badge">🏆</div>
+          <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0 0 10px; color: #ffffff;">Certificate Ready!</h2>
+          <p style="font-size: 0.95rem; margin-bottom: 24px; line-height: 1.5;">
+            Your Summership participation E-Certificate has been generated and downloaded successfully as a high-resolution JPG.
           </p>
+
+          <div class="success-buttons">
+            <a href="#" id="linkedin-share-link" class="linkedin-post-btn" target="_blank">
+              <span>🚀</span> Post on LinkedIn
+            </a>
+            <button type="button" id="download-pdf-btn" class="secondary-download-btn">
+              Download Official PDF Version
+            </button>
+            <button type="button" id="download-jpg-btn" class="secondary-download-btn">
+              Download JPG Copy Again
+            </button>
+          </div>
+
+          <span class="claim-another-link" id="reset-form-btn">← Claim Certificate for another number</span>
         </div>
-      </section>
-
-      <div class="claim-layout">
-        <!-- Certificate Preview Column -->
-        <section class="certificate-card" id="cert-card-shell">
-          <div class="controls-head" style="margin-bottom: 8px;">
-            <div>
-              <p class="eyebrow">Certificate Viewport</p>
-              <h2>Official E-Certificate Preview</h2>
-            </div>
-          </div>
-
-          <div class="claim-info-card" id="preview-placeholder">
-            <span style="font-size: 3rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.05));">🎓</span>
-            <strong style="color: #ffffff; font-size: 1.15rem; margin-top: 8px;">Verification Required</strong>
-            <p class="claim-placeholder-text">
-              Enter your registered 10-digit phone number in the portal form to verify your selection lock and automatically generate your customized E-Certificate.
-            </p>
-          </div>
-
-          <div class="fetch-loader" id="loader-spinner" style="margin: 60px 0;">
-            <span>Retrieving locked selection details...</span>
-          </div>
-
-          <!-- Dynamic Certificate Render Area -->
-          <div class="cert-preview-wrapper" id="cert-wrapper">
-            <canvas id="cert-canvas"></canvas>
-          </div>
-        </section>
-
-        <!-- Claim Controls Column -->
-        <aside class="stack-form" style="display: flex; flex-direction: column; gap: 20px;">
-          <section class="controls-card" style="margin-top: 0; padding: 24px;">
-            <div class="controls-head" style="margin-bottom: 20px;">
-              <div>
-                <p class="eyebrow">Verification Form</p>
-                <h2>Claim Credentials</h2>
-              </div>
-            </div>
-
-            <label style="display: flex; flex-direction: column; gap: 8px; font-weight: 700; color: var(--muted); font-size: 0.9rem;">
-              REGISTERED MOBILE NUMBER
-              <input 
-                type="tel" 
-                name="mobileNumber" 
-                id="claim-mobile-input"
-                placeholder="Enter 10-digit registered number" 
-                maxlength="10"
-                style="width: 100%; padding: 14px; border-radius: var(--radius-md); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 1rem; transition: border-color 0.2s;"
-                required 
-              />
-            </label>
-
-            <!-- Customization Controls (Hidden by default, unlocked upon valid phone number verification) -->
-            <div id="customizer-options" style="display: none; flex-direction: column; gap: 16px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px; animation: fadeIn 0.4s ease-out forwards;">
-              <span class="selection-panel-label" style="background: rgba(16, 185, 129, 0.12); color: #10b981; font-weight: 800; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; width: fit-content; margin-bottom: 4px;">Selection Locked Successfully</span>
-              
-              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: var(--radius-md); padding: 16px; margin-bottom: 8px;">
-                <span style="font-size: 0.76rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">LOCKED PROBLEM STATEMENT</span>
-                <h4 id="selection-title" style="color: #ffffff; font-size: 0.98rem; margin: 4px 0 2px; font-weight: 700; line-height: 1.4;">Problem Statement Title</h4>
-                <p id="selection-team" style="color: var(--brand-deep); font-size: 0.85rem; font-weight: 800; margin: 0;">Team: Name</p>
-              </div>
-
-              <label style="display: flex; flex-direction: column; gap: 8px; font-weight: 700; color: var(--muted); font-size: 0.88rem;">
-                NAME DISPLAY MODE
-                <select id="cert-name-display" style="width: 100%; padding: 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; font-size: 0.92rem;">
-                  <option value="team" selected>Team Name (Group Representation)</option>
-                  <option value="leader">Email Address (Individual ID)</option>
-                </select>
-              </label>
-
-              <label style="display: flex; flex-direction: column; gap: 8px; font-weight: 700; color: var(--muted); font-size: 0.88rem;">
-                CALLIGRAPHY STYLE
-                <select id="cert-font-style" style="width: 100%; padding: 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; font-size: 0.92rem;">
-                  <option value="Montserrat" selected>Modern Corporate (Sans-Serif)</option>
-                  <option value="Great Vibes">Classic Calligraphy (Script)</option>
-                  <option value="Playfair Display">Elegant Editorial (Serif)</option>
-                </select>
-              </label>
-
-              <div class="action-row-buttons">
-                <button type="button" id="download-jpg-btn" class="primary-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
-                  💾 Download JPG
-                </button>
-                <button type="button" id="download-pdf-btn" class="secondary-button" style="border: 1px solid rgba(255,255,255,0.15);">
-                  📄 Download PDF
-                </button>
-                <button type="button" id="linkedin-btn" class="primary-button linkedin-share-button">
-                  🚀 Share E-Certificate on LinkedIn
-                </button>
-              </div>
-            </div>
-          </section>
-        </aside>
       </div>
     </div>
 
-    <!-- Hidden Template Image Loader for Canvas Engine -->
+    <!-- Hidden Canvas and template image to perform high-resolution drawing in the background -->
+    <canvas id="cert-canvas" style="display: none;"></canvas>
     <img id="cert-template-img" src="/images/certificate-template.jpg" style="display: none;" />
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const mobileInput = document.getElementById("claim-mobile-input");
-        const placeholderMsg = document.getElementById("preview-placeholder");
-        const loaderSpinner = document.getElementById("loader-spinner");
-        const certWrapper = document.getElementById("cert-wrapper");
+        const mobileInput = document.getElementById("mobile-number-input");
+        const submitBtn = document.getElementById("submit-btn");
+        const btnLoader = document.getElementById("btn-loader");
+        const btnText = document.getElementById("btn-text");
+        
+        const formView = document.getElementById("form-view");
+        const successView = document.getElementById("success-view");
+        const resetFormBtn = document.getElementById("reset-form-btn");
+        
+        const errorPanel = document.getElementById("error-panel");
+        const errorMsgText = document.getElementById("error-msg-text");
+
         const certCanvas = document.getElementById("cert-canvas");
         const certTemplateImg = document.getElementById("cert-template-img");
         
-        const certCardShell = document.getElementById("cert-card-shell");
-        const customizerOptions = document.getElementById("customizer-options");
-        const selectionTitle = document.getElementById("selection-title");
-        const selectionTeam = document.getElementById("selection-team");
-        
-        const certNameDisplaySelect = document.getElementById("cert-name-display");
-        const certFontStyleSelect = document.getElementById("cert-font-style");
-        
         const downloadJpgBtn = document.getElementById("download-jpg-btn");
         const downloadPdfBtn = document.getElementById("download-pdf-btn");
-        const linkedinBtn = document.getElementById("linkedin-btn");
+        const linkedinShareLink = document.getElementById("linkedin-share-link");
 
         let participantLeaderName = "";
         let participantTeamName = "";
         let lockedProblemTitle = "";
 
-        // Preload premium Google Fonts dynamically for Canvas drawing compatibility
+        // Preload essential high-resolution fonts in cache for canvas compatibility
         const googleFonts = [
-          { name: "Great Vibes", url: "https://fonts.gstatic.com/s/greatvibes/v15/RWmMoKHY3JJDZdOW9tE1746u.woff2" },
-          { name: "Playfair Display", url: "https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD7K413qaH78BmcgYVEvt2I1qBFhcGy5z.woff2" },
           { name: "Montserrat", url: "https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" }
         ];
 
-        async function loadCustomFonts() {
+        async function preloadFonts() {
           for (const f of googleFonts) {
             try {
               const font = new FontFace(f.name, `url(${f.url})`);
@@ -308,16 +398,28 @@
             }
           }
         }
-
-        loadCustomFonts();
+        preloadFonts();
 
         function isValidMobile(num) {
           return /^[6-9]\d{9}$/.test(num);
         }
 
-        function drawCertificate() {
+        // Handle text entry to enable button
+        mobileInput.addEventListener("input", (e) => {
+          const value = e.target.value.trim();
+          errorPanel.style.display = "none";
+          
+          if (value.length === 10 && isValidMobile(value)) {
+            submitBtn.disabled = false;
+          } else {
+            submitBtn.disabled = true;
+          }
+        });
+
+        // Background canvas drawing engine
+        function generateAndDownloadCertificate() {
           if (!certTemplateImg.complete) {
-            certTemplateImg.onload = drawCertificate;
+            certTemplateImg.onload = generateAndDownloadCertificate;
             return;
           }
 
@@ -328,137 +430,39 @@
           certCanvas.width = width;
           certCanvas.height = height;
 
-          // Draw certificate template base
+          // Base background
           ctx.drawImage(certTemplateImg, 0, 0, width, height);
 
-          // Custom name logic selection
-          const isTeam = certNameDisplaySelect.value === "team";
-          const displayName = isTeam ? participantTeamName : participantLeaderName;
+          // Draw Team Name (Accredited Group identity)
+          const displayName = participantTeamName || participantLeaderName || "Participant";
+          const fontSize = Math.floor(width * 0.045); // Dynamic scaling percentage
 
-          if (!displayName) return;
-
-          const selectedFont = certFontStyleSelect.value;
-          let fontSizeMultiplier = 0.045; // Default percentage of canvas width for dynamic scaling
-
-          if (selectedFont === "Great Vibes") {
-            fontSizeMultiplier = 0.06;
-          }
-
-          const fontSize = Math.floor(width * fontSizeMultiplier);
-          const weight = selectedFont === "Great Vibes" ? "normal" : "bold";
-
-          ctx.font = `${weight} ${fontSize}px '${selectedFont}', sans-serif`;
-          ctx.fillStyle = "#111827"; // Signature dark typography matching the credentials design
+          ctx.font = `bold ${fontSize}px 'Montserrat', sans-serif`;
+          ctx.fillStyle = "#111827"; // Dark Charcoal
           ctx.textAlign = "center";
           ctx.textBaseline = "bottom";
 
           const x = width / 2;
-          const y = height * 0.465; // Coordinate line coordinates centered horizontally on the line
+          const y = height * 0.465; // Horizontal line intersection height
 
           ctx.fillText(displayName, x, y);
+
+          // Trigger automated download instantly!
+          triggerJpgDownload();
         }
 
-        async function fetchLockedSelection(mobileNumber) {
-          if (!isValidMobile(mobileNumber)) {
-            resetView("Please enter a valid 10-digit registered mobile number.");
-            return;
-          }
-
-          // Show loader spinner
-          placeholderMsg.style.display = "none";
-          certWrapper.style.display = "none";
-          loaderSpinner.style.display = "flex";
-          certCardShell.classList.remove("active");
-          customizerOptions.style.display = "none";
-
-          try {
-            const response = await fetch(`/api/fetch-selection?mobileNumber=${encodeURIComponent(mobileNumber)}`);
-            const data = await response.json();
-
-            loaderSpinner.style.display = "none";
-
-            if (data.success) {
-              // Set variables
-              participantLeaderName = data.leaderName;
-              participantTeamName = data.teamName;
-              lockedProblemTitle = data.title;
-
-              // Update control text
-              selectionTitle.textContent = lockedProblemTitle;
-              selectionTeam.textContent = `Team: ${participantTeamName}`;
-
-              // Unlock layouts
-              certWrapper.style.display = "block";
-              certCardShell.classList.add("active");
-              customizerOptions.style.display = "flex";
-
-              // Draw canvas
-              drawCertificate();
-            } else {
-              resetView(data.message);
-            }
-          } catch (error) {
-            console.error("AJAX Lookup Error:", error);
-            loaderSpinner.style.display = "none";
-            resetView("Server connection error. Please verify your phone number and try again.");
-          }
-        }
-
-        function resetView(errorMsg) {
-          participantLeaderName = "";
-          participantTeamName = "";
-          lockedProblemTitle = "";
-
-          certWrapper.style.display = "none";
-          certCardShell.classList.remove("active");
-          customizerOptions.style.display = "none";
-          placeholderMsg.style.display = "flex";
-
-          placeholderMsg.innerHTML = `
-            <span style="font-size: 3rem; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.15));">⚠️</span>
-            <strong style="color: #ef4444; font-size: 1.15rem; margin-top: 8px;">Verification Locked</strong>
-            <p class="claim-placeholder-text" style="color: var(--muted);">${errorMsg}</p>
-          `;
-        }
-
-        // Add real-time phone number entry tracking
-        mobileInput.addEventListener("input", (e) => {
-          const value = e.target.value.trim();
-          if (value.length === 10) {
-            localStorage.setItem("cert_claim_mobile", value);
-            fetchLockedSelection(value);
-          } else {
-            resetView("Enter your registered 10-digit phone number in the portal form to verify your selection lock and automatically generate your customized E-Certificate.");
-          }
-        });
-
-        // Pull cached mobile number if available
-        if (!mobileInput.value.trim() && localStorage.getItem("cert_claim_mobile")) {
-          mobileInput.value = localStorage.getItem("cert_claim_mobile");
-        }
-
-        if (mobileInput.value.trim().length === 10) {
-          fetchLockedSelection(mobileInput.value.trim());
-        }
-
-        // Select changes redraw canvas dynamically
-        certFontStyleSelect.addEventListener("change", drawCertificate);
-        certNameDisplaySelect.addEventListener("change", drawCertificate);
-
-        // JPG Download Action
-        downloadJpgBtn.addEventListener("click", () => {
-          const name = (certNameDisplaySelect.value === "team" ? participantTeamName : participantLeaderName) || "E-Certificate";
+        function triggerJpgDownload() {
+          const displayName = participantTeamName || participantLeaderName || "Participant";
           const link = document.createElement("a");
           link.href = certCanvas.toDataURL("image/jpeg", 1.0);
-          link.download = `GradSkills_Summership_Certificate_${name.replace(/\s+/g, '_')}.jpg`;
+          link.download = `GradSkills_Summership_Certificate_${displayName.replace(/\s+/g, '_')}.jpg`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-        });
+        }
 
-        // PDF Download Action
-        downloadPdfBtn.addEventListener("click", () => {
-          const name = (certNameDisplaySelect.value === "team" ? participantTeamName : participantLeaderName) || "E-Certificate";
+        function triggerPdfDownload() {
+          const displayName = participantTeamName || participantLeaderName || "Participant";
           const { jsPDF } = window.jspdf;
           const pdf = new jsPDF({
             orientation: "landscape",
@@ -467,15 +471,41 @@
           });
           const imgData = certCanvas.toDataURL("image/jpeg", 1.0);
           pdf.addImage(imgData, "JPEG", 0, 0, 297, 210);
-          pdf.save(`GradSkills_Summership_Certificate_${name.replace(/\s+/g, '_')}.pdf`);
-        });
+          pdf.save(`GradSkills_Summership_Certificate_${displayName.replace(/\s+/g, '_')}.pdf`);
+        }
 
-        // LinkedIn sharing URL composer
-        linkedinBtn.addEventListener("click", () => {
-          const isTeam = certNameDisplaySelect.value === "team";
-          const name = isTeam ? participantTeamName : participantLeaderName;
+        // Click Handler triggers AJAX lookup, drawing and download
+        submitBtn.addEventListener("click", async () => {
+          const mobileNumber = mobileInput.value.trim();
           
-          const postText = `I am excited to share that I have locked my problem statement and claimed my official participation E-Certificate for the GradSkills Summership Challenge 2026! 🚀🎓 
+          if (!isValidMobile(mobileNumber)) {
+            showError("Please enter a valid 10-digit registered mobile number.");
+            return;
+          }
+
+          // Trigger loading spinner state
+          submitBtn.disabled = true;
+          btnLoader.style.display = "inline-block";
+          btnText.textContent = "Verifying...";
+          errorPanel.style.display = "none";
+
+          try {
+            const response = await fetch(`/api/fetch-selection?mobileNumber=${encodeURIComponent(mobileNumber)}`);
+            const data = await response.json();
+
+            // Disable spinner state
+            submitBtn.disabled = false;
+            btnLoader.style.display = "none";
+            btnText.textContent = "Generate Certificate";
+
+            if (data.success) {
+              // Cache data
+              participantLeaderName = data.leaderName;
+              participantTeamName = data.teamName;
+              lockedProblemTitle = data.title;
+
+              // Compose pre-filled LinkedIn Post Text
+              const postText = `I am excited to share that I have locked my problem statement and claimed my official participation E-Certificate for the GradSkills Summership Challenge 2026! 🚀🎓 
 
 We are working on some highly impactful solutions for our selected problem: "${lockedProblemTitle}". Can't wait to learn, collaborate, and build with my team! 💡💻
 
@@ -483,9 +513,54 @@ Thank you @GradSkills for this awesome opportunity! 🌟🏆
 
 #GradSkills #Summership2026 #Hackathon #WebDevelopment #CodingChallenge #Internship`;
 
-          const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(postText)}`;
-          window.open(shareUrl, "_blank");
+              linkedinShareLink.href = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(postText)}`;
+
+              // Cache mobile number to let users stay verified on this device
+              localStorage.setItem("cert_claim_mobile", mobileNumber);
+
+              // Instantly draw background certificate and trigger download!
+              generateAndDownloadCertificate();
+
+              // Switch to Success View
+              formView.style.display = "none";
+              successView.style.display = "flex";
+            } else {
+              showError(data.message);
+            }
+          } catch (error) {
+            console.error("AJAX verification failed:", error);
+            submitBtn.disabled = false;
+            btnLoader.style.display = "none";
+            btnText.textContent = "Generate Certificate";
+            showError("Network connection failed. Please try again.");
+          }
         });
+
+        function showError(msg) {
+          errorMsgText.textContent = msg;
+          errorPanel.style.display = "flex";
+        }
+
+        // Reset views for another number lookup
+        resetFormBtn.addEventListener("click", () => {
+          mobileInput.value = "";
+          submitBtn.disabled = true;
+          
+          successView.style.display = "none";
+          formView.style.display = "block";
+          errorPanel.style.display = "none";
+        });
+
+        // Download Action Buttons in Success View
+        downloadJpgBtn.addEventListener("click", triggerJpgDownload);
+        downloadPdfBtn.addEventListener("click", triggerPdfDownload);
+
+        // Pre-fill cached mobile number if present
+        if (localStorage.getItem("cert_claim_mobile")) {
+          const cachedNumber = localStorage.getItem("cert_claim_mobile");
+          mobileInput.value = cachedNumber;
+          submitBtn.disabled = false;
+        }
       });
     </script>
   </body>

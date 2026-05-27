@@ -1501,6 +1501,13 @@ app.post("/submission", (req, res) => {
   return res.redirect("/submission");
 });
 
+app.get("/claim-certificate", (req, res) => {
+  res.render("claim-certificate", {
+    title: "Claim E-Certificate | GradSkills Summership 2026",
+    sponsorLogos: SPONSOR_LOGOS,
+  });
+});
+
 app.get("/submission-admin", requireAdmin, async (req, res, next) => {
   try {
     const [submissions] = await pool.query(

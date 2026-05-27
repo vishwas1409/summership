@@ -460,52 +460,6 @@
 
       .reset-link:hover { color: #a855f7; }
 
-      /* ─── CERT PREVIEW ──────────────────────────────────────── */
-      .cert-preview-wrap {
-        width: 100%;
-        margin-bottom: 28px;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid rgba(139, 92, 246, 0.22);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
-        position: relative;
-        animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
-
-      .cert-preview-wrap::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(160deg, rgba(139, 92, 246, 0.06), transparent 60%);
-        pointer-events: none;
-        z-index: 1;
-      }
-
-      #cert-preview-img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 15px;
-        object-fit: cover;
-      }
-
-      /* LinkedIn attach hint */
-      .li-hint {
-        display: none;
-        align-items: flex-start;
-        gap: 8px;
-        margin-top: 10px;
-        padding: 12px 14px;
-        border: 1px solid rgba(10, 102, 194, 0.25);
-        border-radius: 12px;
-        background: rgba(10, 102, 194, 0.07);
-        font-size: 0.82rem;
-        color: #93c5fd;
-        line-height: 1.5;
-        text-align: left;
-        animation: fadeUp 0.3s ease both;
-      }
-
       /* ─── RESPONSIVE ────────────────────────────────────────── */
       @media (max-width: 600px) {
         .cert-card { padding: 36px 24px; }
@@ -610,27 +564,24 @@
 
     <script>
       (function () {
-        const mobileInput   = document.getElementById('mobile-number-input');
-        const submitBtn     = document.getElementById('submit-btn');
-        const btnLoader     = document.getElementById('btn-loader');
-        const btnText       = document.getElementById('btn-text');
-        const formView      = document.getElementById('form-view');
-        const successView   = document.getElementById('success-view');
-        const resetBtn      = document.getElementById('reset-form-btn');
-        const errorPanel    = document.getElementById('error-panel');
-        const errorText     = document.getElementById('error-msg-text');
-        const certCanvas    = document.getElementById('cert-canvas');
-        const certImg       = document.getElementById('cert-template-img');
-        const pdfBtn        = document.getElementById('download-pdf-btn');
-        const jpgBtn        = document.getElementById('download-jpg-btn');
-        const liBtn         = document.getElementById('linkedin-share-btn');
-        const liHint        = document.getElementById('li-hint');
-        const previewImg    = document.getElementById('cert-preview-img');
+        const mobileInput = document.getElementById('mobile-number-input');
+        const submitBtn   = document.getElementById('submit-btn');
+        const btnLoader   = document.getElementById('btn-loader');
+        const btnText     = document.getElementById('btn-text');
+        const formView    = document.getElementById('form-view');
+        const successView = document.getElementById('success-view');
+        const resetBtn    = document.getElementById('reset-form-btn');
+        const errorPanel  = document.getElementById('error-panel');
+        const errorText   = document.getElementById('error-msg-text');
+        const certCanvas  = document.getElementById('cert-canvas');
+        const certImg     = document.getElementById('cert-template-img');
+        const pdfBtn      = document.getElementById('download-pdf-btn');
+        const jpgBtn      = document.getElementById('download-jpg-btn');
+        const liBtn       = document.getElementById('linkedin-share-link');
 
-        let teamName     = '';
-        let leaderName   = '';
+        let teamName   = '';
+        let leaderName = '';
         let problemTitle = '';
-        let liPostText   = '';
 
         /* ── Preload Montserrat for canvas ── */
         (async function () {
@@ -643,12 +594,13 @@
 
         function validMobile(n) { return /^[6-9]\d{9}$/.test(n); }
 
+        /* Enable / disable button as user types */
         mobileInput.addEventListener('input', function () {
           errorPanel.style.display = 'none';
           submitBtn.disabled = !validMobile(this.value.trim());
         });
 
-        /* ── Draw certificate on canvas ── */
+        /* ── Certificate draw ── */
         function drawCert() {
           return new Promise(function (resolve) {
             function draw() {
@@ -661,19 +613,20 @@
 
               const display  = teamName || leaderName || 'Participant';
               const fontSize = Math.floor(w * 0.045);
-              ctx.font         = 'bold ' + fontSize + "px 'Montserrat', sans-serif";
-              ctx.fillStyle    = '#111827';
-              ctx.textAlign    = 'center';
-              ctx.textBaseline = 'bottom';
+              ctx.font          = 'bold ' + fontSize + "px 'Montserrat', sans-serif";
+              ctx.fillStyle     = '#111827';
+              ctx.textAlign     = 'center';
+              ctx.textBaseline  = 'bottom';
               ctx.fillText(display, w / 2, h * 0.465);
               resolve();
             }
+
             if (certImg.complete) { draw(); }
             else                  { certImg.onload = draw; }
           });
         }
 
-        function fname() {
+        function filename() {
           return 'GradSkills_Summership_Certificate_' +
             (teamName || leaderName || 'Participant').replace(/\s+/g, '_');
         }
@@ -681,7 +634,7 @@
         function downloadJpg() {
           const a = document.createElement('a');
           a.href     = certCanvas.toDataURL('image/jpeg', 1.0);
-          a.download = fname() + '.jpg';
+          a.download = filename() + '.jpg';
           a.click();
         }
 
@@ -689,10 +642,10 @@
           const { jsPDF } = window.jspdf;
           const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
           pdf.addImage(certCanvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0, 297, 210);
-          pdf.save(fname() + '.pdf');
+          pdf.save(filename() + '.pdf');
         }
 
-        /* ── Main generate handler ── */
+        /* ── Main submission handler ── */
         submitBtn.addEventListener('click', async function () {
           const mobile = mobileInput.value.trim();
           if (!validMobile(mobile)) {
@@ -700,6 +653,7 @@
             return;
           }
 
+          /* Loading state */
           submitBtn.disabled = true;
           submitBtn.classList.add('loading');
           btnLoader.style.display = 'inline-block';
@@ -707,69 +661,46 @@
           errorPanel.style.display = 'none';
 
           try {
-            const res = await fetch('/api/fetch-selection?mobileNumber=' + encodeURIComponent(mobile));
-
-            /* Handle non-JSON responses (e.g. HTML error pages from server crash) */
-            const contentType = res.headers.get('content-type') || '';
-            if (!contentType.includes('application/json')) {
-              const text = await res.text();
-              console.error('Non-JSON response:', res.status, text.slice(0, 200));
-              submitBtn.classList.remove('loading');
-              btnLoader.style.display = 'none';
-              btnText.textContent = 'Generate Certificate';
-              submitBtn.disabled = false;
-              showError('Server error (' + res.status + '). Please try again or contact support.');
-              return;
-            }
-
+            const res  = await fetch('/api/fetch-selection?mobileNumber=' + encodeURIComponent(mobile));
             const data = await res.json();
 
+            /* Reset button */
             submitBtn.classList.remove('loading');
             btnLoader.style.display = 'none';
             btnText.textContent = 'Generate Certificate';
             submitBtn.disabled = false;
 
-            if (!data.success) { showError(data.message || 'Verification failed. Please try again.'); return; }
+            if (!data.success) { showError(data.message); return; }
 
             teamName     = data.teamName   || '';
             leaderName   = data.leaderName || '';
             problemTitle = data.title      || '';
 
-            /* Build LinkedIn caption */
-            liPostText =
-              '🎉 I am thrilled to share that I have officially locked my Problem Statement ' +
+            /* Build LinkedIn share */
+            const post =
+              'I am thrilled to share that I have officially locked my problem statement ' +
               'and received my E-Certificate from the GradSkills Summership Challenge 2026! 🚀🎓\n\n' +
               'Our team is working on: "' + problemTitle + '" — can\'t wait to build, learn, and ship! 💡\n\n' +
               'Huge thanks to @GradSkills for this incredible opportunity! 🌟\n\n' +
-              '#GradSkills #Summership2026 #Hackathon #Innovation #BuildInPublic';
+              '#GradSkills #Summership2026 #Hackathon #Innovation';
+
+            liBtn.href = 'https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(post);
 
             localStorage.setItem('cert_claim_mobile', mobile);
 
-            /* Draw, show preview, then auto-download */
             await drawCert();
-            const dataUrl = certCanvas.toDataURL('image/jpeg', 1.0);
-            previewImg.src = dataUrl;
             downloadJpg();
 
             formView.style.display    = 'none';
             successView.style.display = 'flex';
 
-          } catch (err) {
-            console.error('Fetch error:', err);
+          } catch (_) {
             submitBtn.classList.remove('loading');
             btnLoader.style.display = 'none';
             btnText.textContent = 'Generate Certificate';
             submitBtn.disabled = false;
-            showError('Could not reach server: ' + (err.message || 'Unknown error') + '. Please refresh and try again.');
+            showError('Network error. Please check your connection and try again.');
           }
-        });
-
-        /* ── LinkedIn share: re-download cert + open composer + show attach hint ── */
-        liBtn.addEventListener('click', function () {
-          downloadJpg();   /* ensure cert is in downloads */
-          liHint.style.display = 'flex';
-          const url = 'https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(liPostText);
-          window.open(url, '_blank', 'noopener,noreferrer');
         });
 
         function showError(msg) {
@@ -781,7 +712,6 @@
           mobileInput.value         = '';
           submitBtn.disabled        = true;
           errorPanel.style.display  = 'none';
-          liHint.style.display      = 'none';
           successView.style.display = 'none';
           formView.style.display    = 'flex';
         });
@@ -792,11 +722,10 @@
         /* Restore cached number */
         const cached = localStorage.getItem('cert_claim_mobile');
         if (cached) {
-          mobileInput.value  = cached;
+          mobileInput.value = cached;
           submitBtn.disabled = !validMobile(cached);
         }
       })();
-
     </script>
   </body>
 </html>

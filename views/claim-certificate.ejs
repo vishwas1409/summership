@@ -9,152 +9,257 @@
     <!-- jsPDF Library for client-side PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+      /* Futuristic Dark Theme System Reset & Body */
       body {
-        background: #030712;
+        background: #020617; /* Slate 950 */
         color: #f3f4f6;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        overflow-x: hidden;
       }
 
+      /* Abstract Futuristic Background Grid & Ambient Glow */
       .claim-container {
         display: flex;
         align-items: center;
         justify-content: center;
         flex-grow: 1;
-        padding: 40px 24px;
+        padding: 64px 24px;
         position: relative;
+        background-image: 
+          linear-gradient(rgba(139, 92, 246, 0.015) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(139, 92, 246, 0.015) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-position: center center;
       }
 
-      /* Glow background behind the card */
-      .claim-container::before {
-        content: "";
+      /* Soft Blurred Neon Lights behind the central card */
+      .ambient-glow-purple {
         position: absolute;
-        width: 450px;
-        height: 450px;
-        background: radial-gradient(circle, rgba(140, 82, 255, 0.08) 0%, rgba(16, 185, 129, 0.03) 70%, transparent 100%);
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(168, 85, 247, 0.04) 50%, transparent 70%);
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         z-index: 0;
         pointer-events: none;
+        filter: blur(40px);
       }
 
+      .ambient-glow-blue {
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 65%);
+        top: 30%;
+        left: 70%;
+        z-index: 0;
+        pointer-events: none;
+        filter: blur(50px);
+      }
+
+      /* Premium Animated Border & Glassmorphic Main Card */
       .claim-card {
         width: 100%;
-        max-width: 540px;
-        background: rgba(17, 24, 39, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 28px;
-        padding: 48px;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        max-width: 560px;
+        background: rgba(5, 8, 22, 0.65);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 36px;
+        padding: 56px 48px;
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        box-shadow: 
+          0 0 50px rgba(139, 92, 246, 0.05),
+          0 25px 60px -15px rgba(0, 0, 0, 0.7);
         z-index: 1;
         position: relative;
         text-align: center;
-        animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: cardEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards, borderPulse 6s ease-in-out infinite;
+        overflow: hidden;
       }
 
-      @keyframes cardFadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+      /* Moving subtle accent border effect */
+      .claim-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 36px;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, transparent 40%, transparent 60%, rgba(168, 85, 247, 0.4) 100%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
       }
 
-      .claim-card-logo {
-        height: 56px;
-        width: auto;
+      @keyframes cardEntrance {
+        from { opacity: 0; transform: translateY(30px) scale(0.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @keyframes borderPulse {
+        0% { border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 0 50px rgba(139, 92, 246, 0.05), 0 25px 60px -15px rgba(0, 0, 0, 0.7); }
+        50% { border-color: rgba(168, 85, 247, 0.35); box-shadow: 0 0 65px rgba(168, 85, 247, 0.1), 0 25px 60px -15px rgba(0, 0, 0, 0.7); }
+        100% { border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 0 50px rgba(139, 92, 246, 0.05), 0 25px 60px -15px rgba(0, 0, 0, 0.7); }
+      }
+
+      /* Powered by GradSkills Badge */
+      .powered-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(139, 92, 246, 0.08);
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #d8b4fe; /* Purple 300 */
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
         margin-bottom: 24px;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.05);
+        animation: float 4s ease-in-out infinite;
       }
 
-      .claim-card h1 {
-        font-size: 2.25rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        margin: 0 0 12px;
-        background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+      /* Logo Hover/Float Animation */
+      .claim-card-logo {
+        height: 60px;
+        width: auto;
+        margin-bottom: 16px;
+        animation: float 5s ease-in-out infinite;
+        filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.35));
+      }
+
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-6px); }
+        100% { transform: translateY(0px); }
+      }
+
+      /* Stunning Holographic Certificate Icon */
+      .hologram-icon {
+        font-size: 2.5rem;
+        display: inline-block;
+        margin-bottom: 12px;
+        animation: float 4.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6));
+      }
+
+      /* Stripe/Vercel Gradient Typography */
+      .gradient-title {
+        font-size: 2.6rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #ffffff 15%, #d8b4fe 55%, #8b5cf6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        margin: 0 0 12px;
       }
 
       .claim-card p {
-        font-size: 0.98rem;
-        color: var(--muted);
-        line-height: 1.5;
-        margin: 0 0 36px;
+        font-size: 1.05rem;
+        color: #9ca3af; /* Gray 400 */
+        line-height: 1.6;
+        margin: 0 0 40px;
+        font-weight: 400;
       }
 
+      /* Premium Glassmorphic Input wrapper */
       .big-input-wrapper {
         position: relative;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
       }
 
       .big-input {
         width: 100%;
-        padding: 20px 24px;
-        font-size: 1.35rem;
+        padding: 22px 28px;
+        font-size: 1.45rem;
         font-weight: 700;
         text-align: center;
-        background: rgba(255, 255, 255, 0.03);
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 20px;
         color: #ffffff;
         letter-spacing: 0.05em;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
       }
 
       .big-input::placeholder {
-        color: rgba(255, 255, 255, 0.3);
-        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.25);
+        font-size: 1.15rem;
         font-weight: 500;
         letter-spacing: 0;
       }
 
       .big-input:focus {
-        border-color: #8c52ff;
-        background: rgba(255, 255, 255, 0.05);
-        box-shadow: 0 0 0 4px rgba(140, 82, 255, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-color: rgba(168, 85, 247, 0.6);
+        background: rgba(15, 23, 42, 0.65);
+        box-shadow: 
+          0 0 30px rgba(168, 85, 247, 0.2),
+          inset 0 2px 4px rgba(0, 0, 0, 0.2);
         outline: none;
       }
 
+      /* Powerful Shimmering Action Button */
       .generate-btn {
         width: 100%;
-        padding: 18px 28px;
-        font-size: 1.15rem;
+        padding: 20px 32px;
+        font-size: 1.2rem;
         font-weight: 800;
-        border-radius: 18px;
+        border-radius: 20px;
         border: none;
         color: #ffffff;
-        background: linear-gradient(135deg, #8c52ff 0%, #6366f1 100%);
-        box-shadow: 0 10px 25px -5px rgba(140, 82, 255, 0.4);
+        background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #6366f1 100%);
+        background-size: 200% auto;
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
         cursor: pointer;
-        transition: all 0.25s ease;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
       }
 
       .generate-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px -5px rgba(140, 82, 255, 0.6);
-        background: linear-gradient(135deg, #9a66ff 0%, #4f46e5 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(139, 92, 246, 0.55);
+        background-position: right center;
       }
 
       .generate-btn:active {
-        transform: translateY(0);
+        transform: translateY(-1px);
       }
 
       .generate-btn:disabled {
-        opacity: 0.5;
+        opacity: 0.4;
         cursor: not-allowed;
         transform: none !important;
         box-shadow: none !important;
       }
 
-      /* Loader styles */
+      /* Loading Shimmer pulse effect */
+      .generate-btn.loading {
+        background: linear-gradient(90deg, #8b5cf6 25%, #a855f7 50%, #8b5cf6 75%);
+        background-size: 200% 100%;
+        animation: btnShimmer 1.5s infinite linear;
+      }
+
+      @keyframes btnShimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+
       .inline-loader {
         display: none;
         width: 20px;
@@ -169,141 +274,172 @@
         to { transform: rotate(360deg); }
       }
 
-      /* Error panel styling */
+      /* Premium glass error alert */
       .error-alert {
         display: none;
-        background: rgba(239, 68, 68, 0.08);
+        background: rgba(239, 68, 68, 0.06);
         border: 1px solid rgba(239, 68, 68, 0.25);
-        color: #f87171;
-        padding: 14px 18px;
-        border-radius: 14px;
-        font-size: 0.92rem;
-        line-height: 1.4;
-        margin-top: 16px;
+        color: #fca5a5;
+        padding: 16px 20px;
+        border-radius: 16px;
+        font-size: 0.94rem;
+        line-height: 1.5;
+        margin-top: 20px;
         text-align: left;
         align-items: flex-start;
-        gap: 10px;
-        animation: slideDown 0.3s ease-out forwards;
+        gap: 12px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
       @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
+        from { opacity: 0; transform: translateY(-12px); }
         to { opacity: 1; transform: translateY(0); }
       }
 
-      /* Success view container styling */
+      /* Success Screen Styles */
       .success-view {
         display: none;
         flex-direction: column;
         align-items: center;
-        animation: cardFadeIn 0.5s ease-out forwards;
+        animation: successEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes successEntrance {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
       }
 
       .success-badge {
-        width: 80px;
-        height: 80px;
-        background: rgba(16, 185, 129, 0.1);
-        border: 2px solid rgba(16, 185, 129, 0.25);
+        width: 88px;
+        height: 88px;
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.3);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
+        font-size: 2.8rem;
         margin-bottom: 24px;
-        box-shadow: 0 0 30px rgba(16, 185, 129, 0.15);
+        box-shadow: 
+          0 0 35px rgba(16, 185, 129, 0.2),
+          inset 0 0 15px rgba(16, 185, 129, 0.1);
+        animation: badgePulse 2s infinite ease-in-out;
+      }
+
+      @keyframes badgePulse {
+        0% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
+        50% { transform: scale(1.05); box-shadow: 0 0 45px rgba(16, 185, 129, 0.3); }
+        100% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.15); }
       }
 
       .success-buttons {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
         width: 100%;
-        margin-top: 24px;
+        margin-top: 28px;
       }
 
       .linkedin-post-btn {
         width: 100%;
-        padding: 16px 24px;
-        font-size: 1.05rem;
+        padding: 18px 24px;
+        font-size: 1.1rem;
         font-weight: 800;
-        border-radius: 16px;
+        border-radius: 18px;
         border: none;
         color: #ffffff;
         background: linear-gradient(135deg, #0a66c2 0%, #0077b5 100%);
-        box-shadow: 0 10px 20px -5px rgba(10, 102, 194, 0.4);
+        box-shadow: 0 10px 25px -5px rgba(10, 102, 194, 0.45);
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         text-decoration: none;
-        transition: all 0.25s ease;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       .linkedin-post-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 15px 25px -5px rgba(10, 102, 194, 0.6);
+        box-shadow: 0 15px 30px -5px rgba(10, 102, 194, 0.6);
       }
 
       .secondary-download-btn {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 16px;
         color: #f3f4f6;
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 1rem;
         cursor: pointer;
         transition: all 0.25s;
         text-align: center;
         width: 100%;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
 
       .secondary-download-btn:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.18);
+        transform: translateY(-1px);
       }
 
       .claim-another-link {
-        color: var(--brand-deep);
-        font-weight: 800;
+        color: #a78bfa; /* Purple 400 */
+        font-weight: 700;
         text-decoration: none;
-        font-size: 0.9rem;
-        margin-top: 20px;
+        font-size: 0.94rem;
+        margin-top: 24px;
         cursor: pointer;
-        transition: color 0.2s;
+        transition: all 0.2s;
         display: inline-block;
       }
 
       .claim-another-link:hover {
+        color: #c084fc; /* Purple 300 */
         text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <!-- Clean Minimal Branded Header without Certify badges -->
-    <header class="site-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(3, 7, 18, 0.9);">
+    <!-- Clean Branded Header matching top startup aesthetic -->
+    <header class="site-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
       <a href="/" class="brand" style="margin: 0 auto; padding-left: 0;">
-        <span class="brand-badge brand-badge-logo">
+        <span class="brand-badge brand-badge-logo" style="filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.2));">
           <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills logo" class="brand-badge-image" />
         </span>
         <span>
-          <strong>GradSkills</strong>
-          <small>Summership 2026</small>
+          <strong style="color: #ffffff; letter-spacing: -0.01em;">GradSkills</strong>
+          <small style="color: rgba(255,255,255,0.4);">Summership 2026</small>
         </span>
       </a>
     </header>
 
     <%- include("partials/flash") %>
 
-    <!-- Card Container centered vertically -->
+    <!-- Card Container with abstract backgrounds -->
     <div class="claim-container">
+      <div class="ambient-glow-purple"></div>
+      <div class="ambient-glow-blue"></div>
+      
       <div class="claim-card">
         <!-- Input Form View -->
         <div id="form-view">
-          <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills Logo" class="claim-card-logo" />
-          <h1>Summership E-Certificate</h1>
-          <p>Verify your locked problem statement and download your accrediting certificate.</p>
+          <div class="powered-badge">
+            <span>✨</span> Powered by GradSkills
+          </div>
+          
+          <div style="position: relative; display: inline-block;">
+            <img src="https://image2url.com/r2/default/images/1772364686444-9b7d74ff-802f-4f36-8b7e-d7daaedab981.png" alt="GradSkills Logo" class="claim-card-logo" />
+            <span class="hologram-icon" style="position: absolute; right: -25px; bottom: 10px;">📜</span>
+          </div>
+
+          <h1 class="gradient-title">Summership E-Certificate</h1>
+          <p>Access and download your official participation certificate instantly.</p>
           
           <div class="big-input-wrapper">
             <input 
@@ -331,8 +467,8 @@
         <!-- Download & Success Share View -->
         <div class="success-view" id="success-view">
           <div class="success-badge">🏆</div>
-          <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0 0 10px; color: #ffffff;">Certificate Ready!</h2>
-          <p style="font-size: 0.95rem; margin-bottom: 24px; line-height: 1.5;">
+          <h2 style="font-size: 1.95rem; font-weight: 800; margin: 0 0 10px; color: #ffffff; letter-spacing: -0.01em;">Certificate Ready!</h2>
+          <p style="font-size: 0.98rem; margin-bottom: 24px; line-height: 1.5; color: #9ca3af;">
             Your Summership participation E-Certificate has been generated and downloaded successfully as a high-resolution JPG.
           </p>
 
@@ -483,10 +619,11 @@
             return;
           }
 
-          // Trigger loading spinner state
+          // Trigger loading shimmer state
           submitBtn.disabled = true;
+          submitBtn.classList.add("loading");
           btnLoader.style.display = "inline-block";
-          btnText.textContent = "Verifying...";
+          btnText.textContent = "Verifying Credentials...";
           errorPanel.style.display = "none";
 
           try {
@@ -495,6 +632,7 @@
 
             // Disable spinner state
             submitBtn.disabled = false;
+            submitBtn.classList.remove("loading");
             btnLoader.style.display = "none";
             btnText.textContent = "Generate Certificate";
 
@@ -530,6 +668,7 @@ Thank you @GradSkills for this awesome opportunity! 🌟🏆
           } catch (error) {
             console.error("AJAX verification failed:", error);
             submitBtn.disabled = false;
+            submitBtn.classList.remove("loading");
             btnLoader.style.display = "none";
             btnText.textContent = "Generate Certificate";
             showError("Network connection failed. Please try again.");
